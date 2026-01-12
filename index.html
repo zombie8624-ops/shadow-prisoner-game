@@ -12,25 +12,20 @@
         .hud { padding: 20px; text-shadow: 2px 2px 0 #000; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; }
         .hud-left { display: flex; flex-direction: column; gap: 5px; }
         .hud-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-        
         #health-bar-container { width: 300px; height: 30px; background: #333; border: 4px solid #555; margin-bottom: 5px; transform: skewX(-15deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
         #health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4444, #ff0000); box-shadow: 0 0 10px #ff0000; transition: width 0.1s; }
-        
-        #energy-bar-container { width: 250px; height: 15px; background: #222; border: 2px solid #444; transform: skewX(-15deg); position: relative; overflow: hidden; }
+        #energy-bar-container { width: 250px; height: 15px; background: #222; border: 2px solid #444; transform: skewX(-15deg); position: relative; overflow: hidden; margin-top: 5px; }
         #energy-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #aa00ff, #5500aa); box-shadow: 0 0 10px #aa00ff; transition: width 0.1s; }
-        #energy-text { position: absolute; top: -20px; left: 0; font-size: 10px; color: #d0f; text-shadow: 0 0 5px #d0f; display: none; width: 100%; text-align: center; }
-
+        #energy-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; text-shadow: 0 0 5px #d0f; display: none; z-index: 2; pointer-events: none; }
         #cells-count { color: #00ffff; font-size: 16px; margin-top: 10px; letter-spacing: 1px; }
         #status-panel { margin-top: 15px; font-size: 12px; color: #00ff00; line-height: 1.5; }
         #dist-display { font-size: 20px; color: #fff; margin-bottom: 5px; }
         #danger-display { font-size: 16px; color: #ff4444; margin-bottom: 20px; }
-        
         #skill-container { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; }
         #skill-icon { width: 60px; height: 60px; border: 4px solid #00ffff; background: rgba(0, 255, 255, 0.2); display: flex; justify-content: center; align-items: center; font-size: 30px; color: #00ffff; border-radius: 10px; position: relative; box-shadow: 0 0 15px #00ffff; transition: all 0.2s; text-shadow: 0 0 5px #fff; }
         #skill-icon.cooldown { border-color: #555; background: rgba(0,0,0,0.5); color: #555; box-shadow: none; text-shadow: none; }
         #skill-timer { position: absolute; font-size: 20px; color: #fff; font-weight: bold; }
         #skill-label { margin-top: 5px; font-size: 10px; color: #ccc; text-shadow: 1px 1px 0 #000; }
-        
         .desktop-hint { color: #888; position: absolute; bottom: 10px; left: 10px; font-size: 10px; line-height: 1.5; z-index: 6; }
         #start-screen, #game-over-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; pointer-events: auto; overflow: hidden; }
         #game-over-screen { background: rgba(10, 5, 20, 0.7); backdrop-filter: blur(2px); }
@@ -38,14 +33,14 @@
         .hero-art { position: absolute; bottom: 0; left: 2%; height: 85vh; width: auto; max-width: 45vw; object-fit: contain; filter: drop-shadow(0 0 30px rgba(160, 32, 240, 0.3)); animation: floatHero 6s ease-in-out infinite; z-index: 2; }
         .boss-art { position: absolute; bottom: 0; right: 2%; height: 90vh; width: auto; max-width: 45vw; object-fit: contain; filter: drop-shadow(0 0 30px rgba(255, 50, 50, 0.4)); animation: floatBoss 7s ease-in-out infinite; z-index: 2; }
         .scene-art { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; mix-blend-mode: normal; z-index: 0; }
-        
         #damage-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%); opacity: 0; pointer-events: none; transition: opacity 0.1s; z-index: 5; mix-blend-mode: overlay; }
         #frenzy-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 30%, rgba(120, 0, 200, 0.4) 100%); opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 4; mix-blend-mode: hard-light; }
-
+        #orientation-lock { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; flex-direction: column; justify-content: center; align-items: center; color: #fff; text-align: center; }
+        #orientation-lock span { font-size: 40px; margin-bottom: 20px; animation: rotatePhone 2s infinite; }
+        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 25% { transform: rotate(90deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(0deg); } }
         @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } 50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), inset 0 0 10px rgba(0, 255, 255, 0.2); border-color: #00ffff; color: #00ffff; text-shadow: 0 0 10px #00ffff; transform: skewX(10deg) scale(1.05); } 100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } }
         @keyframes floatHero { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes floatBoss { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        
         .menu-box { position: relative; padding: 40px 80px; border: 2px solid rgba(160, 32, 240, 0.5); background: rgba(0, 0, 0, 0.85); transform: skewX(-10deg); text-align: center; box-shadow: 0 0 30px rgba(160, 32, 240, 0.2); z-index: 10; backdrop-filter: blur(5px); }
         .menu-box::before, .menu-box::after { content: ''; position: absolute; width: 20px; height: 20px; border: 4px solid #00ffff; transition: all 0.3s; }
         .menu-box::before { top: -4px; left: -4px; border-right: none; border-bottom: none; }
@@ -58,12 +53,12 @@
         #start-btn:hover { animation: none; background: #00ffff; color: #000; border-color: #00ffff; box-shadow: 0 0 40px rgba(0, 255, 255, 0.8); }
         button:active { transform: skewX(10deg) scale(0.98); }
         .hidden { display: none !important; }
-        
         #mobile-controls { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: auto; }
         .d-pad { position: absolute; bottom: 30px; left: 30px; display: flex; gap: 15px; }
         .action-pad { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; }
         .ctrl-btn { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; user-select: none; }
         .skill-btn-mobile { border-color: #00ffff; color: #00ffff; }
+        @media only screen and (orientation: portrait) { #orientation-lock { display: flex; } }
         @media (hover: none) and (pointer: coarse) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
     </style>
 </head>
@@ -71,7 +66,8 @@
     <canvas id="gameCanvas"></canvas>
     <div id="damage-overlay"></div>
     <div id="frenzy-overlay"></div>
-    
+    <div id="orientation-lock"><span>📱</span><p>PLEASE ROTATE DEVICE</p></div>
+
     <div id="ui-layer">
         <div class="hud">
             <div class="hud-left">
@@ -89,9 +85,7 @@
             <div id="skill-icon"><span>❄️</span><div id="skill-timer"></div></div>
             <div id="skill-label">FREEZE (E)</div>
         </div>
-        <div class="desktop-hint">
-            WASD/ARROWS: MOVE | SPACE/K: JUMP | J/CLICK: ATTACK | DOWN+J: PLUNGE | E: FREEZE | SHIFT: DASH
-        </div>
+        <div class="desktop-hint">WASD/ARROWS: MOVE | SPACE/K: JUMP | J/CLICK: ATTACK | DOWN+J: PLUNGE | E: FREEZE | SHIFT: DASH</div>
         <div id="mobile-controls">
             <div class="d-pad"><div class="ctrl-btn" id="btn-left">←</div><div class="ctrl-btn" id="btn-right">→</div></div>
             <div class="action-pad"><div class="ctrl-btn skill-btn-mobile" id="btn-skill">❄️</div><div class="ctrl-btn" id="btn-dash">⚡</div><div class="ctrl-btn large-btn" id="btn-attack">⚔️</div><div class="ctrl-btn" id="btn-jump">▲</div></div>
@@ -104,25 +98,16 @@
             <img src="hero.gif" class="hero-art" alt="" onerror="this.style.display='none'">
             <img src="boss.gif" class="boss-art" alt="" onerror="this.style.display='none'">
         </div>
-        <div class="menu-box">
-            <h1>SHADOW<br>EVOLUTION</h1>
-            <div class="subtitle">SURVIVE THE INFINITE</div>
-            <button id="start-btn">I'M READY</button>
-        </div>
+        <div class="menu-box"><h1>SHADOW<br>EVOLUTION</h1><div class="subtitle">SURVIVE THE INFINITE</div><button id="start-btn">I'M READY</button></div>
     </div>
-
     <div id="game-over-screen" class="hidden">
-        <div class="menu-box" style="border-color: #ff3333; box-shadow: 0 0 30px rgba(255, 50, 50, 0.2);">
-            <h1 style="text-shadow: 3px 3px 0 #880000, -3px -3px 0 #ff8888; color: #ff3333;">FALLEN</h1>
-            <p id="final-score" style="font-size: 14px; color: #fff; margin: 20px 0; transform: skewX(10deg);">DISTANCE: 0m</p>
-            <button id="restart-btn" style="border-color: #ff3333; color: #ff3333;">RESPAWN</button>
-            <style>
-                #restart-btn:hover { background: #ff3333; color: white; box-shadow: 0 0 25px rgba(255, 50, 50, 0.6); }
-            </style>
+        <div class="menu-box" style="border-color: #f33; box-shadow: 0 0 30px rgba(255,50,50,0.2);">
+            <h1 style="color: #f33;">FALLEN</h1><p id="final-score" style="margin: 20px 0;">DISTANCE: 0m</p><button id="restart-btn" style="border-color: #f33; color: #f33;">RESPAWN</button>
         </div>
     </div>
 
     <script>
+        // --- 1. CONFIG & ASSETS ---
         const SPRITE_CONFIG = {
             hero: { idle: {src:'hero_idle.png',frames:6}, run: {src:'hero_run.png',frames:8}, jump: {src:'hero_jump.png',frames:4}, dash: {src:'hero_dash.png',frames:4}, attack_1: {src:'hero_attack_1.png',frames:8}, attack_2: {src:'hero_attack_2.png',frames:3}, attack_3: {src:'hero_attack_3.png',frames:5}, skill: {src:'hero_skill.png',frames:3}, plunge: {src:'hero_plunge.png',frames:1} },
             enemy: { idle: {src:'enemy_idle.png',frames:4}, walk: {src:'enemy_walk.png',frames:6}, attack: {src:'enemy_attack.png',frames:5} },
@@ -206,7 +191,7 @@
             draw(ctx, cx, cy) {
                 if (this.dead) return;
                 let info = assets.effects.impact;
-                if (info && info.img.complete && info.img.naturalWidth !== 0) {
+                if (info && info.img && info.img.complete && info.img.naturalWidth !== 0) {
                     let f = Math.floor(this.timer);
                     if (f >= info.frames) f = info.frames - 1;
                     let sw = info.img.width / info.frames;
@@ -238,15 +223,15 @@
         }
 
         class Particle {
-            constructor(x, y, c, s, sz, l) { this.x = x; this.y = y; this.c = c; this.vx = (Math.random() - 0.5) * s; this.vy = (Math.random() - 0.5) * s; this.sz = sz * 1.5; this.l = l; this.ml = l; }
-            update() { this.x += this.vx; this.y += this.vy; this.l--; this.sz *= 0.95; }
-            draw(ctx, cx, cy) { ctx.globalAlpha = this.l / this.ml; ctx.fillStyle = this.c; ctx.fillRect(this.x - cx, this.y - cy, this.sz, this.sz); ctx.globalAlpha = 1; }
+            constructor(x, y, color, speed, size, life) { this.x = x; this.y = y; this.color = color; this.vx = (Math.random() - 0.5) * speed; this.vy = (Math.random() - 0.5) * speed; this.size = size * 1.5; this.life = life; this.maxLife = life; }
+            update() { this.x += this.vx; this.y += this.vy; this.life--; this.size *= 0.95; }
+            draw(ctx, cx, cy) { ctx.globalAlpha = this.life / this.maxLife; ctx.fillStyle = this.color; ctx.fillRect(this.x - cx, this.y - cy, this.size, this.size); ctx.globalAlpha = 1; }
         }
 
         class FloatingText {
-            constructor(x, y, t, c, s = 24) { this.x = x; this.y = y; this.t = t; this.c = c; this.l = 60; this.vy = -1; this.s = s; }
-            update() { this.y += this.vy; this.l--; }
-            draw(ctx, cx, cy) { ctx.globalAlpha = Math.max(0, this.l / 60); ctx.fillStyle = this.c; ctx.font = `${this.s}px 'Press Start 2P'`; ctx.fillText(this.t, this.x - cx, this.y - cy); ctx.globalAlpha = 1; }
+            constructor(x, y, t, c, s = 24) { this.x = x; this.y = y; this.t = t; this.c = c; this.life = 60; this.vy = -1; this.s = s; }
+            update() { this.y += this.vy; this.life--; }
+            draw(ctx, cx, cy) { ctx.globalAlpha = Math.max(0, this.life / 60); ctx.fillStyle = this.c; ctx.font = `${this.s}px 'Press Start 2P'`; ctx.fillText(this.t, this.x - cx, this.y - cy); ctx.globalAlpha = 1; }
         }
 
         class Entity {
@@ -450,20 +435,16 @@
                     let f = Math.floor(this.gameFrame / 10) % info.frames;
                     ctx.save(); ctx.translate(dx + this.w / 2, dy + this.h / 2); if (!this.facingRight) ctx.scale(-1, 1);
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
-                    
-                    let sw = info.img.width / info.frames; 
-                    let dsz = sw * this.spriteScale;
+                    let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
+                    // FIX: Bottom align
                     let vy = (this.h / 2) - dsz;
-                    
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
                     ctx.restore();
-                    
                     let hr = this.hp / this.maxHp;
-                    let barY = dy + this.h - dsz - 5 - 12;
-                    if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) barY += this.currentPlatform.depressionOffset;
-                    
-                    ctx.fillStyle = 'red'; ctx.fillRect(dx, barY, 60, 8);
-                    ctx.fillStyle = hr < 0.2 ? '#f00' : (hr < 0.5 ? '#ff0' : '#0f0'); ctx.fillRect(dx, barY, 60 * hr, 8);
+                    let by = dy + this.h - dsz - 5 - 12;
+                    if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) by += this.currentPlatform.depressionOffset;
+                    ctx.fillStyle = 'red'; ctx.fillRect(dx, by, 60, 8);
+                    ctx.fillStyle = hr < 0.2 ? '#f00' : (hr < 0.5 ? '#ff0' : '#0f0'); ctx.fillRect(dx, by, 60 * hr, 8);
                 }
             }
             takeDamage(a) {
@@ -483,9 +464,7 @@
             draw(ctx, cx, cy) {
                 if (this.opened) return;
                 let dy = this.y - cy;
-                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) {
-                    dy += this.currentPlatform.depressionOffset;
-                }
+                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) dy += this.currentPlatform.depressionOffset;
                 ctx.fillStyle = this.color; ctx.fillRect(this.x - cx, dy, this.w, this.h);
                 ctx.fillStyle = '#000'; ctx.fillRect(this.x - cx + 15, dy + 15, 10, 10);
             }
@@ -517,9 +496,7 @@
             draw(ctx, cx, cy) {
                 if (this.dead) return;
                 let dy = this.y - cy;
-                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) {
-                    dy += this.currentPlatform.depressionOffset;
-                }
+                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) dy += this.currentPlatform.depressionOffset;
                 ctx.fillStyle = this.color; ctx.fillRect(this.x - cx, dy, this.w, this.h);
                 ctx.fillStyle = '#fff'; ctx.fillRect(this.x - cx + 8, dy + 4, 4, 12); ctx.fillRect(this.x - cx + 4, dy + 8, 12, 4);
             }
@@ -553,7 +530,7 @@
                 this.energy = 0;
                 camera.shake = 20;
                 floatingTexts.push(new FloatingText(this.x, this.y - 100, "FRENZY MODE!", "#d0f", 40));
-                document.getElementById('energy-text').style.display = 'block';
+                document.getElementById('energy-text').style.display = 'flex';
                 document.getElementById('frenzy-overlay').style.opacity = 1;
                 this.hp = Math.min(this.hp + this.maxHp * 0.3, this.maxHp);
             }
@@ -570,7 +547,7 @@
                 enemies.forEach(e => { if (!e.dead && Math.abs((e.x + e.w / 2) - (this.x + this.w / 2)) < 300) { e.freeze(300); } });
                 floatingTexts.push(new FloatingText(this.x, this.y - 80, "FREEZE!", "#0ff", 30));
             }
-            update(platforms, enemies) {
+            update(plat, enemies) {
                 if (this.dead) return;
                 if (this.skillCooldown > 0) this.skillCooldown--;
                 if (this.invulnerableTimer > 0) this.invulnerableTimer--;
@@ -594,7 +571,7 @@
                 }
                 if (this.isSpawning) {
                     this.spawnTimer++; this.vx = 0; this.vy = 12; this.x += this.vx; this.y += this.vy;
-                    for (let p of platforms) if (checkRectCollide(this, p)) {
+                    for (let p of plat) if (checkRectCollide(this, p)) {
                         this.y = p.y - this.h; this.isSpawning = false; this.grounded = true;
                         createParticles(this.x + this.w / 2, this.y + this.h, '#0ff', 20, 50); camera.shake = 15;
                     }
@@ -604,10 +581,10 @@
                 if (this.grounded) { this.jumpCount = 0; if (this.dashCooldown > 0) this.dashCooldown--; }
                 if (this.attackCooldown > 0) this.attackCooldown--;
                 if (this.comboWindow > 0) this.comboWindow--;
-                super.update(platforms); 
+                super.update(plat); 
                 if (!this.prevGrounded && this.grounded) {
                     this.isLanding = true; this.landingTimer = 0; createParticles(this.x + this.w / 2, this.y + this.h, '#fff', 2, 4);
-                    if (this.isPlunging) { this.isPlunging = false; this.isLanding = false; this.performPlungeImpact(enemies, platforms); }
+                    if (this.isPlunging) { this.isPlunging = false; this.isLanding = false; this.performPlungeImpact(enemies, plat); }
                 }
                 if (keys.left || keys.right || keys.jump || keys.dash || keys.attack) this.isLanding = false;
                 if (!this.isDashing && !this.isSkillAnim && !this.isPlunging) {
@@ -638,7 +615,7 @@
                 }
                 if (this.isDashing) {
                     this.dashTimer--; this.vy = 0; this.x += this.vx;
-                    for (let p of platforms) if (checkRectCollide(this, p)) { if (this.vx > 0) this.x = p.x - this.w; if (this.vx < 0) this.x = p.x + p.w; this.isDashing = false; this.vx = 0; }
+                    for (let p of plat) if (checkRectCollide(this, p)) { if (this.vx > 0) this.x = p.x - this.w; if (this.vx < 0) this.x = p.x + p.w; this.isDashing = false; this.vx = 0; }
                     this.trail.push({ x: this.x, y: this.y, alpha: 0.6 }); createParticles(this.x + this.w / 2, this.y + this.h / 2, '#0ff', 5, 3);
                     if (this.dashTimer <= 0) { this.isDashing = false; this.vx *= 0.2; }
                 }
@@ -669,10 +646,10 @@
                 else this.state = 'idle';
                 document.getElementById('health-fill').style.width = `${(this.hp / this.maxHp) * 100}%`;
             }
-            performPlungeImpact(enemies, platforms) {
+            performPlungeImpact(enemies, plat) {
                 camera.shake = 20; impactEffects.push(new ImpactEffect(this.x + this.w / 2, this.y + this.h));
                 let fx = this.x + this.w / 2; let fy = this.y + this.h + 2;
-                for (let p of platforms) if (fx >= p.x && fx <= p.x + p.w && fy >= p.y && fy <= p.y + 20) { p.depressionOffset = 5; p.depressionTimer = 120; }
+                for (let p of plat) if (fx >= p.x && fx <= p.x + p.w && fy >= p.y && fy <= p.y + 20) { p.depressionOffset = 5; p.depressionTimer = 120; }
                 let rx = this.x + this.w / 2; let ry = this.y + this.h;
                 enemies.forEach(e => {
                     if (!e.dead) {
