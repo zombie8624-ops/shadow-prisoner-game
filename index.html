@@ -10,8 +10,9 @@
         canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
         .hud { padding: 20px; text-shadow: 2px 2px 0 #000; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; }
-        .hud-left { display: flex; flex-direction: column; }
+        .hud-left { display: flex; flex-direction: column; gap: 5px; }
         .hud-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+        
         #health-bar-container { width: 300px; height: 30px; background: #333; border: 4px solid #555; margin-bottom: 5px; transform: skewX(-15deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
         #health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4444, #ff0000); box-shadow: 0 0 10px #ff0000; transition: width 0.1s; }
         
@@ -41,11 +42,6 @@
         #damage-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%); opacity: 0; pointer-events: none; transition: opacity 0.1s; z-index: 5; mix-blend-mode: overlay; }
         #frenzy-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 30%, rgba(120, 0, 200, 0.4) 100%); opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 4; mix-blend-mode: hard-light; }
 
-        /* 【新增】竖屏锁定提示 */
-        #orientation-lock { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; flex-direction: column; justify-content: center; align-items: center; color: #fff; text-align: center; }
-        #orientation-lock span { font-size: 40px; margin-bottom: 20px; animation: rotatePhone 2s infinite; }
-        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 25% { transform: rotate(90deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(0deg); } }
-
         @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } 50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), inset 0 0 10px rgba(0, 255, 255, 0.2); border-color: #00ffff; color: #00ffff; text-shadow: 0 0 10px #00ffff; transform: skewX(10deg) scale(1.05); } 100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } }
         @keyframes floatHero { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes floatBoss { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -68,23 +64,14 @@
         .action-pad { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; }
         .ctrl-btn { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; user-select: none; }
         .skill-btn-mobile { border-color: #00ffff; color: #00ffff; }
-        
-        /* 移动端/竖屏检测 */
-        @media only screen and (orientation: portrait) {
-            #orientation-lock { display: flex; }
-        }
-        @media (hover: none) and (pointer: coarse) { 
-            #mobile-controls { display: block; } 
-            .desktop-hint { display: none; } 
-        }
+        @media (hover: none) and (pointer: coarse) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
     <div id="damage-overlay"></div>
     <div id="frenzy-overlay"></div>
-    <div id="orientation-lock"><span>📱</span><p>PLEASE ROTATE DEVICE</p></div>
-
+    
     <div id="ui-layer">
         <div class="hud">
             <div class="hud-left">
@@ -123,6 +110,7 @@
             <button id="start-btn">I'M READY</button>
         </div>
     </div>
+
     <div id="game-over-screen" class="hidden">
         <div class="menu-box" style="border-color: #ff3333; box-shadow: 0 0 30px rgba(255, 50, 50, 0.2);">
             <h1 style="text-shadow: 3px 3px 0 #880000, -3px -3px 0 #ff8888; color: #ff3333;">FALLEN</h1>
@@ -462,23 +450,26 @@
                     let f = Math.floor(this.gameFrame / 10) % info.frames;
                     ctx.save(); ctx.translate(dx + this.w / 2, dy + this.h / 2); if (!this.facingRight) ctx.scale(-1, 1);
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
-                    let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
-                    // FIX: Bottom align calculation
+                    
+                    let sw = info.img.width / info.frames; 
+                    let dsz = sw * this.spriteScale;
                     let vy = (this.h / 2) - dsz;
+                    
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
                     ctx.restore();
+                    
                     let hr = this.hp / this.maxHp;
-                    let by = dy + this.h - dsz - 5 - 12;
-                    if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) by += this.currentPlatform.depressionOffset;
-                    ctx.fillStyle = 'red'; ctx.fillRect(dx, by - 15, 60, 8);
-                    ctx.fillStyle = hr < 0.2 ? '#f00' : (hr < 0.5 ? '#ff0' : '#0f0'); ctx.fillRect(dx, by - 15, 60 * hr, 8);
+                    let barY = dy + this.h - dsz - 5 - 12;
+                    if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) barY += this.currentPlatform.depressionOffset;
+                    
+                    ctx.fillStyle = 'red'; ctx.fillRect(dx, barY, 60, 8);
+                    ctx.fillStyle = hr < 0.2 ? '#f00' : (hr < 0.5 ? '#ff0' : '#0f0'); ctx.fillRect(dx, barY, 60 * hr, 8);
                 }
             }
             takeDamage(a) {
                 this.hp -= a;
                 if (this.hp <= 0) {
                     this.hp = 0; this.dead = true; score++; 
-                    // 【新增】小怪死后生成 5 个灵魂
                     for(let i=0; i<5; i++) souls.push(new Soul(this.x + this.w/2, this.y + this.h/2, 2));
                     killStreak++;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
@@ -545,38 +536,27 @@
                 this.moveSpeedBonus = 1.0; this.attackSpeedBonus = 1.0;
                 this.skillCooldown = 0; this.skillMaxCooldown = 1800;
                 this.isSkillAnim = false; this.skillFrame = 0; this.isPlunging = false; this.invulnerableTimer = 0;
-                
-                // 【新增】能量系统 (暴走)
-                this.energy = 0;
-                this.maxEnergy = 100;
-                this.isFrenzy = false;
-                this.frenzyTimer = 0;
+                this.energy = 0; this.maxEnergy = 100; this.isFrenzy = false; this.frenzyTimer = 0;
             }
-            
-            // 增加能量函数
             addEnergy(amount) {
-                if (this.isFrenzy) return; // 暴走期间不积攒
+                if (this.isFrenzy) return; 
                 this.energy += amount;
                 if (this.energy >= this.maxEnergy) {
                     this.energy = this.maxEnergy;
                     this.activateFrenzy();
                 }
-                // 更新UI
                 document.getElementById('energy-fill').style.width = `${(this.energy/this.maxEnergy)*100}%`;
             }
-            
             activateFrenzy() {
                 this.isFrenzy = true;
-                this.frenzyTimer = 600; // 10秒 (60fps * 10)
+                this.frenzyTimer = 600; 
                 this.energy = 0;
                 camera.shake = 20;
                 floatingTexts.push(new FloatingText(this.x, this.y - 100, "FRENZY MODE!", "#d0f", 40));
                 document.getElementById('energy-text').style.display = 'block';
                 document.getElementById('frenzy-overlay').style.opacity = 1;
-                // 回复 30% 血量
                 this.hp = Math.min(this.hp + this.maxHp * 0.3, this.maxHp);
             }
-
             upgrade(t) {
                 if (t === 'attack') { this.attackSpeedBonus += 0.1; floatingTexts.push(new FloatingText(this.x, this.y - 50, "ATK UP!", "#0f0", 30)); }
                 else { this.moveSpeedBonus += 0.05; floatingTexts.push(new FloatingText(this.x, this.y - 50, "SPD UP!", "#0f0", 30)); }
@@ -587,16 +567,14 @@
                 this.skillCooldown = this.skillMaxCooldown; camera.shake = 15;
                 this.isSkillAnim = true; this.skillFrame = 0; this.state = 'skill'; this.vx = 0;
                 createParticles(this.x, this.y, '#0ff', 20, 100);
-                let c = 0;
-                enemies.forEach(e => { if (!e.dead && Math.abs((e.x + e.w / 2) - (this.x + this.w / 2)) < 300) { e.freeze(300); c++; } });
+                enemies.forEach(e => { if (!e.dead && Math.abs((e.x + e.w / 2) - (this.x + this.w / 2)) < 300) { e.freeze(300); } });
                 floatingTexts.push(new FloatingText(this.x, this.y - 80, "FREEZE!", "#0ff", 30));
             }
-            update(plat, enemies) {
+            update(platforms, enemies) {
                 if (this.dead) return;
                 if (this.skillCooldown > 0) this.skillCooldown--;
                 if (this.invulnerableTimer > 0) this.invulnerableTimer--;
                 
-                // 暴走倒计时
                 if (this.isFrenzy) {
                     this.frenzyTimer--;
                     if (this.frenzyTimer <= 0) {
@@ -604,7 +582,6 @@
                         document.getElementById('energy-text').style.display = 'none';
                         document.getElementById('frenzy-overlay').style.opacity = 0;
                     }
-                    // 更新UI条倒退 (基于600帧)
                     document.getElementById('energy-fill').style.width = `${(this.frenzyTimer/600)*100}%`;
                 }
 
@@ -616,499 +593,170 @@
                     return;
                 }
                 if (this.isSpawning) {
-                    this.spawnTimer++; 
-                    // 【修复】初始下落速度调高，配合无相机跟随
-                    this.vx = 0; 
-                    this.vy = 12; 
-                    this.x += this.vx; 
-                    this.y += this.vy;
-                    
-                    for (let p of plat) {
-                        if (checkRectCollide(this, p)) {
-                            this.y = p.y - this.h;
-                            this.isSpawning = false;
-                            this.grounded = true;
-                            createParticles(this.x + this.w/2, this.y + this.h, '#00ffff', 20, 50);
-                            camera.shake = 15;
-                        }
+                    this.spawnTimer++; this.vx = 0; this.vy = 12; this.x += this.vx; this.y += this.vy;
+                    for (let p of platforms) if (checkRectCollide(this, p)) {
+                        this.y = p.y - this.h; this.isSpawning = false; this.grounded = true;
+                        createParticles(this.x + this.w / 2, this.y + this.h, '#0ff', 20, 50); camera.shake = 15;
                     }
-                    return; 
+                    return;
                 }
-
                 this.prevGrounded = this.grounded;
-
-                if (this.grounded) {
-                    this.jumpCount = 0;
-                    if (this.dashCooldown > 0) this.dashCooldown--;
-                }
-
+                if (this.grounded) { this.jumpCount = 0; if (this.dashCooldown > 0) this.dashCooldown--; }
                 if (this.attackCooldown > 0) this.attackCooldown--;
                 if (this.comboWindow > 0) this.comboWindow--;
-                
-                super.update(plat); 
-
-                // 【修正】在 physics update 之后检查落地，触发下砸冲击
+                super.update(platforms); 
                 if (!this.prevGrounded && this.grounded) {
-                    this.isLanding = true;
-                    this.landingTimer = 0;
-                    createParticles(this.x + this.w/2, this.y + this.h, '#fff', 2, 4);
-
-                    if (this.isPlunging) {
-                        this.isPlunging = false;
-                        this.isLanding = false; 
-                        this.performPlungeImpact(enemies, plat); // 传入 platforms 处理下陷
-                    }
+                    this.isLanding = true; this.landingTimer = 0; createParticles(this.x + this.w / 2, this.y + this.h, '#fff', 2, 4);
+                    if (this.isPlunging) { this.isPlunging = false; this.isLanding = false; this.performPlungeImpact(enemies, platforms); }
                 }
-
-                if (keys.left || keys.right || keys.jump || keys.dash || keys.attack) {
-                    this.isLanding = false;
+                if (keys.left || keys.right || keys.jump || keys.dash || keys.attack) this.isLanding = false;
+                if (!this.isDashing && !this.isSkillAnim && !this.isPlunging) {
+                    let s = CONFIG.playerSpeed * this.moveSpeedBonus;
+                    if (this.isFrenzy) s *= 1.5; 
+                    if (keys.left) { this.vx -= 1.5; if (this.vx < -s) this.vx = -s; this.facingRight = false; }
+                    if (keys.right) { this.vx += 1.5; if (this.vx > s) this.vx = s; this.facingRight = true; }
                 }
-
-                if (!this.isDashing && !this.isSkillAnim && !this.isPlunging) { 
-                    let currentSpeed = CONFIG.playerSpeed * this.moveSpeedBonus;
-                    if (this.isFrenzy) s *= 1.5; // 暴走移速加成
-                    if (keys.left) {
-                        this.vx -= 1.5; 
-                        if (this.vx < -currentSpeed) this.vx = -currentSpeed;
-                        this.facingRight = false;
-                    }
-                    if (keys.right) {
-                        this.vx += 1.5;
-                        if (this.vx > currentSpeed) this.vx = currentSpeed;
-                        this.facingRight = true;
-                    }
-                }
-
                 if (keys.jump && !this.isSkillAnim && !this.isPlunging) {
-                    if (this.isDashing) {
-                        this.isDashing = false;
-                        this.vx *= 0.5;
-                    }
+                    if (this.isDashing) { this.isDashing = false; this.vx *= 0.5; }
                     keys.jump = false;
-                    if (this.grounded || this.jumpCount < 2) { 
-                        this.vy = -CONFIG.jumpForce;
-                        this.jumpCount++;
-                        let pColor = this.jumpCount > 1 ? '#00ffff' : '#fff';
-                        createParticles(this.x + this.w/2, this.y + this.h, pColor, 2, 8);
-                        this.isLanding = false; 
+                    if (this.grounded || this.jumpCount < 2) {
+                        this.vy = -CONFIG.jumpForce; this.jumpCount++;
+                        let c = this.jumpCount > 1 ? '#0ff' : '#fff'; createParticles(this.x + this.w / 2, this.y + this.h, c, 2, 8); this.isLanding = false;
                     }
                 }
-                
-                // 【新增】下砸攻击触发：空中 + 按下 + 攻击
                 if (!this.grounded && keys.down && keys.attack && !this.isPlunging) {
-                    keys.attack = false;
-                    this.isPlunging = true;
-                    this.vy = 25; // 极速下坠
-                    this.vx = 0;  // 停止水平移动
-                    this.isDashing = false;
-                    // 使用 Jump 下落帧作为下砸动作
+                    keys.attack = false; this.isPlunging = true; this.vy = 25; this.vx = 0; this.isDashing = false;
                 }
-                
-                // 下砸过程中持续产生残影
                 if (this.isPlunging) {
-                    if (!this.grounded) {
-                         this.vy = 25; // 保持高速
-                         this.trail.push({x: this.x, y: this.y, alpha: 0.4});
-                    } else {
-                         // Fallback in case logic missed
-                         this.isPlunging = false;
-                    }
+                    if (!this.grounded) { this.vy = 25; this.trail.push({ x: this.x, y: this.y, alpha: 0.4 }); }
+                    else this.isPlunging = false;
                 }
-
                 if (keys.dash && this.dashCooldown <= 0 && !this.isDashing && !this.isSkillAnim && !this.isPlunging) {
-                    keys.dash = false;
-                    this.isDashing = true;
-                    this.dashTimer = CONFIG.dashDuration;
-                    this.dashCooldown = 60;
-                    if (this.isFrenzy) this.dashCooldown = 20; // 暴走冲刺CD极短
-                    let dir = this.facingRight ? 1 : -1;
-                    this.vx = dir * CONFIG.dashSpeed;
-                    this.vy = 0; 
-                    camera.shake = 8;
-                    this.comboCount = 0;
-                    this.isLanding = false; 
+                    keys.dash = false; this.isDashing = true; this.dashTimer = CONFIG.dashDuration; this.dashCooldown = 60;
+                    if (this.isFrenzy) this.dashCooldown = 20; 
+                    let d = this.facingRight ? 1 : -1; this.vx = d * CONFIG.dashSpeed; this.vy = 0; camera.shake = 8; this.comboCount = 0; this.isLanding = false;
                 }
-
                 if (this.isDashing) {
-                    this.dashTimer--;
-                    this.vy = 0; 
-                    this.x += this.vx; 
-                    
-                    for (let p of platforms) {
-                        if (checkRectCollide(this, p)) {
-                            if (this.vx > 0) this.x = p.x - this.w;
-                            if (this.vx < 0) this.x = p.x + p.w;
-                            this.isDashing = false;
-                            this.vx = 0;
-                        }
-                    }
-
-                    this.trail.push({x: this.x, y: this.y, alpha: 0.6});
-                    createParticles(this.x + this.w/2, this.y + this.h/2, '#00ffff', 5, 3);
-                    if (this.dashTimer <= 0) {
-                        this.isDashing = false;
-                        this.vx *= 0.2;
-                    }
+                    this.dashTimer--; this.vy = 0; this.x += this.vx;
+                    for (let p of platforms) if (checkRectCollide(this, p)) { if (this.vx > 0) this.x = p.x - this.w; if (this.vx < 0) this.x = p.x + p.w; this.isDashing = false; this.vx = 0; }
+                    this.trail.push({ x: this.x, y: this.y, alpha: 0.6 }); createParticles(this.x + this.w / 2, this.y + this.h / 2, '#0ff', 5, 3);
+                    if (this.dashTimer <= 0) { this.isDashing = false; this.vx *= 0.2; }
                 }
-
-                if (keys.skill && !this.isSkillAnim) { 
-                    keys.skill = false;
-                    this.castSkill(enemies);
-                }
-
+                if (keys.skill && !this.isSkillAnim) { keys.skill = false; this.castSkill(enemies); }
                 if (keys.attack && this.attackCooldown <= 0 && !this.isSkillAnim && !this.isPlunging) {
                     keys.attack = false;
-                    
-                    if (this.isAttackingAnim && this.comboWindow > 0) {
-                        this.comboCount++;
-                        if (this.comboCount > 3) this.comboCount = 1; 
-                    } else {
-                        this.comboCount = 1;
-                    }
-
-                    this.state = 'attack_' + this.comboCount; 
-                    
-                    const currentAnimConfig = assets.hero[this.state];
-                    const frameCount = currentAnimConfig ? currentAnimConfig.frames : 4;
-                    
+                    if (this.isAttackingAnim && this.comboWindow > 0) { this.comboCount++; if (this.comboCount > 3) this.comboCount = 1; } else this.comboCount = 1;
+                    this.state = 'attack_' + this.comboCount;
+                    let cfg = assets.hero[this.state]; let f = cfg ? cfg.frames : 4;
                     let spdMult = 1.0;
-                    if (this.isFrenzy) spdMult = 2.0; // 暴走攻速翻倍
-                    
-                    this.animSpeed = ((frameCount <= 4) ? 0.2 : 0.25) * this.attackSpeedBonus * spdMult;
-                    
-                    const animDuration = frameCount / this.animSpeed;
-                    
-                    this.attackCooldown = animDuration - 5; 
-                    this.comboWindow = animDuration + 20;    
-                    this.isAttackingAnim = true; 
-                    this.attackFrame = 0;     
-                    this.isLanding = false; 
-                    
+                    if (this.isFrenzy) spdMult = 2.0; 
+                    this.animSpeed = ((f <= 4) ? 0.2 : 0.25) * this.attackSpeedBonus * spdMult;
+                    let dur = f / this.animSpeed;
+                    this.attackCooldown = dur - 5; this.comboWindow = dur + 20; this.isAttackingAnim = true; this.attackFrame = 0; this.isLanding = false;
                     this.performAttack(enemies);
                 }
-
                 if (this.isSkillAnim) {
-                    this.state = 'skill';
-                    this.skillFrame += 0.2; 
-                    let maxFrames = assets.hero.skill ? assets.hero.skill.frames : 3;
-                    if (this.skillFrame >= maxFrames) {
-                        this.isSkillAnim = false;
-                        this.state = 'idle';
-                    }
-                }
-                else if (this.isAttackingAnim) {
-                    this.attackFrame += this.animSpeed; 
-                    
-                    let currentAnim = assets.hero[this.state];
-                    let maxFrames = currentAnim ? currentAnim.frames : 4;
-                    
-                    if (this.attackFrame >= maxFrames) {
-                        this.isAttackingAnim = false; 
-                        this.state = 'idle';
-                    }
-                } 
-                else if (this.isDashing) {
-                    this.state = 'dash';
-                } 
-                else if (this.isPlunging) {
-                    this.state = 'plunge'; // 使用下砸专用帧
-                }
-                else if (!this.grounded) {
-                    this.state = 'jump';
-                } 
-                else if (this.isLanding) {
-                    this.state = 'jump'; 
-                    this.landingTimer++;
-                    if (this.landingTimer > 12) {
-                        this.isLanding = false;
-                        this.state = 'idle';
-                    }
-                } 
-                else if (Math.abs(this.vx) > 0.5) {
-                    this.state = 'run';
-                } 
-                else {
-                    this.state = 'idle';
-                }
-
+                    this.state = 'skill'; this.skillFrame += 0.2; let mf = assets.hero.skill ? assets.hero.skill.frames : 3;
+                    if (this.skillFrame >= mf) { this.isSkillAnim = false; this.state = 'idle'; }
+                } else if (this.isAttackingAnim) {
+                    this.attackFrame += this.animSpeed; let c = assets.hero[this.state]; let mf = c ? c.frames : 4;
+                    if (this.attackFrame >= mf) { this.isAttackingAnim = false; this.state = 'idle'; }
+                } else if (this.isDashing) this.state = 'dash';
+                else if (this.isPlunging) this.state = 'plunge';
+                else if (!this.grounded) this.state = 'jump';
+                else if (this.isLanding) { this.state = 'jump'; this.landingTimer++; if (this.landingTimer > 12) { this.isLanding = false; this.state = 'idle'; } }
+                else if (Math.abs(this.vx) > 0.5) this.state = 'run';
+                else this.state = 'idle';
                 document.getElementById('health-fill').style.width = `${(this.hp / this.maxHp) * 100}%`;
             }
-
-            // 【新增】下砸落地冲击逻辑
             performPlungeImpact(enemies, platforms) {
-                camera.shake = 20;
-                
-                // 1. 生成自定义特效实体
-                impactEffects.push(new ImpactEffect(this.x + this.w/2, this.y + this.h));
-                
-                // 2. 查找脚下平台并触发下陷
-                // 碰撞箱底部中心
-                let feetX = this.x + this.w / 2;
-                let feetY = this.y + this.h + 2; // 稍微向下探测一点
-                
-                for (let p of platforms) {
-                    if (feetX >= p.x && feetX <= p.x + p.w && feetY >= p.y && feetY <= p.y + 20) {
-                        // 触发下陷
-                        p.depressionOffset = 5; // 下陷5像素
-                        p.depressionTimer = 120; // 2秒
-                    }
-                }
-                
-                // 3. 伤害判定
-                const impactRange = 200;
-                const impactX = this.x + this.w/2;
-                const impactY = this.y + this.h;
-                
+                camera.shake = 20; impactEffects.push(new ImpactEffect(this.x + this.w / 2, this.y + this.h));
+                let fx = this.x + this.w / 2; let fy = this.y + this.h + 2;
+                for (let p of platforms) if (fx >= p.x && fx <= p.x + p.w && fy >= p.y && fy <= p.y + 20) { p.depressionOffset = 5; p.depressionTimer = 120; }
+                let rx = this.x + this.w / 2; let ry = this.y + this.h;
                 enemies.forEach(e => {
                     if (!e.dead) {
-                        const dist = Math.hypot((e.x + e.w/2) - impactX, (e.y + e.h) - impactY);
-                        if (dist < impactRange) {
-                            e.takeDamage(50); // 下砸伤害高
-                            if (!e.frozen) {
-                                 e.vy = -10; // 击飞
-                                 e.vx = (e.x < impactX ? -10 : 10);
-                            }
-                            createParticles(e.x + e.w/2, e.y + e.h/2, CONFIG.colors.enemy, 8, 10);
-                            floatingTexts.push(new FloatingText(e.x, e.y - 40, "SMASH!", "#ff00ff", 30));
+                        if (Math.hypot((e.x + e.w / 2) - rx, (e.y + e.h) - ry) < 200) {
+                            e.takeDamage(50);
+                            if (!e.frozen) { e.vy = -10; e.vx = (e.x < rx ? -10 : 10); }
+                            createParticles(e.x + e.w / 2, e.y + e.h / 2, CONFIG.colors.enemy, 8, 10);
+                            floatingTexts.push(new FloatingText(e.x, e.y - 40, "SMASH!", "#f0f", 30));
                         }
                     }
                 });
             }
-
-            takeDamage(amount) {
-                if (this.isDying || this.dead) return;
-
-                this.hp -= amount;
-                
-                floatingTexts.push(new FloatingText(this.x, this.y - 30, `-${Math.floor(amount)}`, "#ff0000", 30));
-                
-                let damageRatio = amount / this.maxHp;
-                camera.shake = 10 + damageRatio * 20; 
-                
-                const overlay = document.getElementById('damage-overlay');
-                overlay.style.opacity = Math.min(1, damageRatio + 0.3);
-                setTimeout(() => overlay.style.opacity = 0, 200);
-
-                if (damageRatio > 0.2) {
-                    hitStop = Math.floor(damageRatio * 10) + 2; 
-                }
-
+            takeDamage(a) {
+                if (this.isDying || this.dead || this.invulnerableTimer > 0) return;
+                this.hp -= a; this.invulnerableTimer = 60;
+                floatingTexts.push(new FloatingText(this.x, this.y - 30, `-${Math.floor(a)}`, "#f00", 30));
+                let r = a / this.maxHp; camera.shake = 10 + r * 20;
+                let o = document.getElementById('damage-overlay'); o.style.opacity = Math.min(1, r + 0.3); setTimeout(() => o.style.opacity = 0, 200);
+                if (r > 0.2) hitStop = Math.floor(r * 10) + 2;
                 if (this.hp <= 0) {
-                    this.hp = 0;
-                    this.isDying = true; 
-                    this.vx = 0;
-                    this.vy = 0;
-                    this.dashTimer = 0;
-                    this.isDashing = false;
-                    
-                    camera.shake = 30;
-                    hitStop = 10; 
-                    createParticles(this.x + this.w/2, this.y + this.h/2, '#ff0000', 10, 50); 
+                    this.hp = 0; this.isDying = true; this.vx = 0; this.vy = 0; this.dashTimer = 0; this.isDashing = false;
+                    camera.shake = 30; hitStop = 10; createParticles(this.x + this.w / 2, this.y + this.h / 2, '#f00', 10, 50);
                 }
             }
-
             performAttack(enemies) {
-                const range = 120;
-                const hitboxX = this.facingRight ? this.x + this.w : this.x - range;
-                const hitboxY = this.y;
-                const hitboxW = range;
-                const hitboxH = this.h;
-
-                this.attackHitbox = { x: hitboxX, y: hitboxY, w: hitboxW, h: hitboxH, timer: 10 }; 
-                
-                let shakeAmt = 5;
-                if (this.comboCount === 3) shakeAmt = 15; 
-                camera.shake = shakeAmt;
-
-                this.vx = this.facingRight ? 5 : -5; 
-
-                for (let i = chests.length - 1; i >= 0; i--) {
-                    let chest = chests[i];
-                    if (!chest.opened && checkRectCollide(this.attackHitbox, chest)) {
-                        chest.break(this);
-                    }
-                }
-                
-                for (let i = grenades.length - 1; i >= 0; i--) {
-                    let g = grenades[i];
-                    if (g.state === 'flying' && checkRectCollide(this.attackHitbox, g)) {
-                        g.destroy();
-                    }
-                }
-
+                const r = 120; const hX = this.facingRight ? this.x + this.w : this.x - r;
+                this.attackHitbox = { x: hX, y: this.y, w: r, h: this.h, timer: 10 };
+                let sa = 5; if (this.comboCount === 3) sa = 15; camera.shake = sa; this.vx = this.facingRight ? 5 : -5;
+                for (let c of chests) if (!c.opened && checkRectCollide(this.attackHitbox, c)) c.break(this);
+                for (let g of grenades) if (g.state === 'flying' && checkRectCollide(this.attackHitbox, g)) g.destroy();
                 let hit = false;
                 enemies.forEach(e => {
                     if (!e.dead && checkRectCollide(this.attackHitbox, e)) {
-                        let damage = 30;
-                        let knockback = 10;
-                        if (this.comboCount === 3) {
-                            damage = 60; 
-                            knockback = 25; 
-                        }
-                        
-                        // 暴走伤害加成
-                        if (this.isFrenzy) damage *= 2;
-
-                        e.takeDamage(damage);
-                        
-                        if (!e.frozen) {
-                             e.vx = this.facingRight ? knockback : -knockback; 
-                             e.vy = -5;
-                        }
-                       
-                        createParticles(e.x + e.w/2, e.y + e.h/2, CONFIG.colors.enemy, 10, 15);
-                        
-                        let textColor = this.comboCount === 3 ? '#ff0000' : '#fff';
-                        let textScale = this.comboCount === 3 ? "CRIT!" : Math.floor(rand(25,35));
-                        floatingTexts.push(new FloatingText(e.x, e.y, textScale, textColor));
-                        
-                        hit = true;
+                        let d = 30, k = 10; if (this.comboCount === 3) { d = 60; k = 25; }
+                        if (this.isFrenzy) d *= 2;
+                        e.takeDamage(d);
+                        if (!e.frozen) { e.vx = this.facingRight ? k : -k; e.vy = -5; }
+                        createParticles(e.x + e.w / 2, e.y + e.h / 2, CONFIG.colors.enemy, 10, 15);
+                        let tc = this.comboCount === 3 ? '#f00' : '#fff'; let ts = this.comboCount === 3 ? "CRIT!" : Math.floor(rand(25, 35));
+                        floatingTexts.push(new FloatingText(e.x, e.y, ts, tc)); hit = true;
                     }
                 });
-
-                if (hit) {
-                    camera.shake += 5; 
-                }
+                if (hit) camera.shake += 5;
             }
-
-            draw(ctx, camX, camY) {
-                if (this.dead) return; 
-
+            draw(ctx, cx, cy) {
+                if (this.dead) return;
+                if (this.invulnerableTimer > 0 && Math.floor(Date.now() / 50) % 2 === 0) return;
                 if (this.isDying) {
-                    ctx.save();
-                    let centerX = this.x - camX + this.w / 2;
-                    let centerY = this.y - camY + this.h / 2;
-                    
-                    ctx.globalAlpha = 0.6 + Math.sin(this.deathTimer * 0.2) * 0.2;
-                    ctx.fillStyle = '#00ffff';
-                    ctx.beginPath();
-                    let r = 10 + this.deathTimer * 0.1; 
-                    ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = '#fff';
-                    ctx.beginPath();
-                    let highlightOffset = r * 0.3;
-                    let highlightSize = r * 0.25;
-                    ctx.arc(centerX + highlightOffset, centerY - highlightOffset, highlightSize, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.restore();
-                    return; 
+                    ctx.save(); let cx2 = this.x - cx + this.w / 2; let cy2 = this.y - cy + this.h / 2;
+                    ctx.globalAlpha = 0.6 + Math.sin(this.deathTimer * 0.2) * 0.2; ctx.fillStyle = '#00ffff'; ctx.beginPath();
+                    let r = 10 + this.deathTimer * 0.1; ctx.arc(cx2, cy2, r, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.beginPath(); let highlightOffset = r * 0.3; let highlightSize = r * 0.25;
+                    ctx.arc(cx2 + highlightOffset, cy2 - highlightOffset, highlightSize, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore(); return;
                 }
-
                 if (this.isSpawning) {
-                    ctx.save();
-                    let centerX = this.x - camX + this.w / 2;
-                    let centerY = this.y - camY + this.h / 2;
-                    
+                    ctx.save(); let cx2 = this.x - cx + this.w / 2; let cy2 = this.y - cy + this.h / 2;
                     for (let i = 1; i <= 15; i++) {
-                        let offsetY = i * 5 + Math.random() * 5; 
-                        let offsetX = (Math.random() - 0.5) * 20; 
-                        let trailR = Math.random() * 3 + 2; 
-                        let alpha = 1 - (i / 15); 
-                        
-                        ctx.fillStyle = `rgba(0, 255, 255, ${alpha * 0.5})`;
-                        ctx.beginPath();
-                        ctx.arc(centerX + offsetX, centerY - offsetY, trailR, 0, Math.PI * 2);
-                        ctx.fill();
+                        let oy = i * 5 + Math.random() * 5; let ox = (Math.random() - 0.5) * 20; let tr = Math.random() * 3 + 2; let a = 1 - (i / 15);
+                        ctx.fillStyle = `rgba(0, 255, 255, ${a * 0.5})`; ctx.beginPath(); ctx.arc(cx2 + ox, cy2 - oy, tr, 0, Math.PI * 2); ctx.fill();
                     }
-
-                    let currentR = Math.min(5 + this.spawnTimer * 0.2, 30);
-                    
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = "#00ffff";
-                    
-                    ctx.fillStyle = '#00ffff';
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, currentR, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = '#fff';
-                    ctx.shadowBlur = 0;
-                    ctx.beginPath();
-                    let highlightOffset = currentR * 0.3; 
-                    let highlightSize = currentR * 0.25;  
-                    ctx.arc(centerX + highlightOffset, centerY - highlightOffset, highlightSize, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.restore();
-                    return;
+                    let cr = Math.min(5 + this.spawnTimer * 0.2, 30);
+                    ctx.shadowBlur = 20; ctx.shadowColor = "#00ffff"; ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(cx2, cy2, cr, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.shadowBlur = 0; ctx.beginPath(); let highlightOffset = cr * 0.3; let highlightSize = cr * 0.25;
+                    ctx.arc(cx2 + highlightOffset, cy2 - highlightOffset, highlightSize, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore(); return;
                 }
-
-                ctx.fillStyle = `rgba(0, 255, 255, 0.4)`;
-                for (let i = this.trail.length - 1; i >= 0; i--) {
-                    let t = this.trail[i];
-                    ctx.globalAlpha = t.alpha;
-                    ctx.fillRect(t.x - camX, t.y - camY, this.w, this.h);
-                    t.alpha -= 0.1;
-                    if (t.alpha <= 0) this.trail.splice(i, 1);
-                }
-                ctx.globalAlpha = 1;
-
-                let drawX = this.x - camX;
-                let drawY = this.y - camY;
-                let drawW = this.w;
-                let drawH = this.h;
-                
-                // 【新增】如果站在下陷的平台上，视觉跟随下沉
-                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) {
-                    drawY += this.currentPlatform.depressionOffset;
-                }
-
-                const spriteInfo = assets.hero[this.state] || assets.hero['idle'];
-                
-                if (!spriteInfo.img || !spriteInfo.img.complete || spriteInfo.img.naturalWidth === 0) {
-                    ctx.fillStyle = this.isDashing ? '#ccffff' : this.color;
-                    ctx.fillRect(drawX, drawY, drawW, drawH);
-                    ctx.fillStyle = '#00ffff'; 
-                    let eyeX = this.facingRight ? drawX + drawW - 10 : drawX + 2;
-                    ctx.fillRect(eyeX, drawY + 10, 8, 8);
-                } else {
-                    let frameX = 0;
+                ctx.fillStyle = `rgba(0, 255, 255, 0.4)`; for (let t of this.trail) { t.alpha -= 0.1; if (t.alpha > 0) ctx.fillRect(t.x - cx, t.y - cy, this.w, this.h); }
+                let dx = this.x - cx; let dy = this.y - cy;
+                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) dy += this.currentPlatform.depressionOffset;
+                let info = assets.hero[this.state] || assets.hero.idle;
+                if (!info.img.complete || info.img.naturalWidth === 0) { ctx.fillStyle = this.isDashing ? '#ccffff' : this.color; ctx.fillRect(dx, dy, this.w, this.h); }
+                else {
+                    let f = 0;
+                    if (this.state === 'jump') { if (this.isLanding) f = (this.landingTimer < 6) ? 2 : 3; else f = (this.vy < 0) ? 0 : 1; }
+                    else if (this.state.startsWith('attack')) f = Math.floor(this.attackFrame);
+                    else if (this.state === 'skill') f = Math.floor(this.skillFrame);
+                    else if (this.state === 'plunge') f = 0;
+                    else f = Math.floor(this.gameFrame / this.staggerFrames) % info.frames;
+                    if (f >= info.frames) f = info.frames - 1;
+                    ctx.save(); ctx.translate(dx + this.w / 2, dy + this.h / 2); if (!this.facingRight) ctx.scale(-1, 1);
                     
-                    if (this.state === 'jump') {
-                        if (this.isLanding) {
-                            if (this.landingTimer < 6) {
-                                frameX = 2; 
-                            } else {
-                                frameX = 3; 
-                            }
-                        } else {
-                            if (this.vy < 0) {
-                                frameX = 0; 
-                            } else {
-                                frameX = 1; 
-                            }
-                        }
-                    } 
-                    else if (this.state.startsWith('attack')) {
-                        frameX = Math.floor(this.attackFrame);
-                    } 
-                    else if (this.state === 'skill') {
-                        frameX = Math.floor(this.skillFrame);
-                    }
-                    else if (this.state === 'plunge') { // 下砸状态
-                        frameX = 0;
-                    }
-                    else {
-                        frameX = Math.floor(this.gameFrame / this.staggerFrames) % spriteInfo.frames;
-                    }
-
-                    if(frameX >= spriteInfo.frames) frameX = spriteInfo.frames - 1;
-
-                    ctx.save();
-                    let centerX = drawX + this.w / 2;
-                    let centerY = drawY + this.h / 2;
-                    ctx.translate(centerX, centerY);
-
-                    if (!this.facingRight) {
-                        ctx.scale(-1, 1);
-                    }
-                    
-                    // 【新增】暴走时的暗影粒子 (替代滤镜) - 增加密度
-                    if (this.isFrenzy && this.gameFrame % 2 === 0) { // 频率加快
-                        createParticles(this.x + this.w / 2, this.y + this.h / 2, '#aa00ff', 2, 3); // 数量增加
+                    if (this.isFrenzy && this.gameFrame % 2 === 0) {
+                        createParticles(this.x + this.w / 2, this.y + this.h / 2, '#aa00ff', 2, 3); 
                     }
 
                     let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
