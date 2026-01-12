@@ -10,22 +10,25 @@
         canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
         .hud { padding: 20px; text-shadow: 2px 2px 0 #000; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; }
-        .hud-left { display: flex; flex-direction: column; gap: 5px; }
+        .hud-left { display: flex; flex-direction: column; }
         .hud-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
         #health-bar-container { width: 300px; height: 30px; background: #333; border: 4px solid #555; margin-bottom: 5px; transform: skewX(-15deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
         #health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4444, #ff0000); box-shadow: 0 0 10px #ff0000; transition: width 0.1s; }
         #energy-bar-container { width: 250px; height: 15px; background: #222; border: 2px solid #444; transform: skewX(-15deg); position: relative; overflow: hidden; margin-top: 5px; }
         #energy-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #aa00ff, #5500aa); box-shadow: 0 0 10px #aa00ff; transition: width 0.1s; }
-        #energy-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; text-shadow: 0 0 5px #d0f; display: none; z-index: 2; pointer-events: none; }
+        #energy-text { position: absolute; top: -18px; left: 0; font-size: 10px; color: #d0f; text-shadow: 0 0 5px #d0f; display: none; }
         #cells-count { color: #00ffff; font-size: 16px; margin-top: 10px; letter-spacing: 1px; }
         #status-panel { margin-top: 15px; font-size: 12px; color: #00ff00; line-height: 1.5; }
         #dist-display { font-size: 20px; color: #fff; margin-bottom: 5px; }
         #danger-display { font-size: 16px; color: #ff4444; margin-bottom: 20px; }
+        
+        /* 默认技能图标位置（桌面端：右下角） */
         #skill-container { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; }
         #skill-icon { width: 60px; height: 60px; border: 4px solid #00ffff; background: rgba(0, 255, 255, 0.2); display: flex; justify-content: center; align-items: center; font-size: 30px; color: #00ffff; border-radius: 10px; position: relative; box-shadow: 0 0 15px #00ffff; transition: all 0.2s; text-shadow: 0 0 5px #fff; }
         #skill-icon.cooldown { border-color: #555; background: rgba(0,0,0,0.5); color: #555; box-shadow: none; text-shadow: none; }
         #skill-timer { position: absolute; font-size: 20px; color: #fff; font-weight: bold; }
         #skill-label { margin-top: 5px; font-size: 10px; color: #ccc; text-shadow: 1px 1px 0 #000; }
+
         .desktop-hint { color: #888; position: absolute; bottom: 10px; left: 10px; font-size: 10px; line-height: 1.5; z-index: 6; }
         #start-screen, #game-over-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; pointer-events: auto; overflow: hidden; }
         #game-over-screen { background: rgba(10, 5, 20, 0.7); backdrop-filter: blur(2px); }
@@ -53,13 +56,21 @@
         #start-btn:hover { animation: none; background: #00ffff; color: #000; border-color: #00ffff; box-shadow: 0 0 40px rgba(0, 255, 255, 0.8); }
         button:active { transform: skewX(10deg) scale(0.98); }
         .hidden { display: none !important; }
+        
         #mobile-controls { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: auto; }
         .d-pad { position: absolute; bottom: 30px; left: 30px; display: flex; gap: 15px; }
         .action-pad { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; }
         .ctrl-btn { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; user-select: none; }
         .skill-btn-mobile { border-color: #00ffff; color: #00ffff; }
+        
         @media only screen and (orientation: portrait) { #orientation-lock { display: flex; } }
-        @media (hover: none) and (pointer: coarse) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
+        /* 移动端适配：调整技能图标位置，避免重叠 */
+        @media (hover: none) and (pointer: coarse) { 
+            #mobile-controls { display: block; } 
+            .desktop-hint { display: none; } 
+            /* 将技能图标移到右上角，防止遮挡按键 */
+            #skill-container { bottom: auto; top: 100px; right: 20px; transform: scale(0.8); }
+        }
     </style>
 </head>
 <body>
@@ -85,7 +96,9 @@
             <div id="skill-icon"><span>❄️</span><div id="skill-timer"></div></div>
             <div id="skill-label">FREEZE (E)</div>
         </div>
-        <div class="desktop-hint">WASD/ARROWS: MOVE | SPACE/K: JUMP | J/CLICK: ATTACK | DOWN+J: PLUNGE | E: FREEZE | SHIFT: DASH</div>
+        <div class="desktop-hint">
+            WASD/ARROWS: MOVE | SPACE/K: JUMP | J/CLICK: ATTACK | DOWN+J: PLUNGE | E: FREEZE | SHIFT: DASH
+        </div>
         <div id="mobile-controls">
             <div class="d-pad"><div class="ctrl-btn" id="btn-left">←</div><div class="ctrl-btn" id="btn-right">→</div></div>
             <div class="action-pad"><div class="ctrl-btn skill-btn-mobile" id="btn-skill">❄️</div><div class="ctrl-btn" id="btn-dash">⚡</div><div class="ctrl-btn large-btn" id="btn-attack">⚔️</div><div class="ctrl-btn" id="btn-jump">▲</div></div>
@@ -98,16 +111,24 @@
             <img src="hero.gif" class="hero-art" alt="" onerror="this.style.display='none'">
             <img src="boss.gif" class="boss-art" alt="" onerror="this.style.display='none'">
         </div>
-        <div class="menu-box"><h1>SHADOW<br>EVOLUTION</h1><div class="subtitle">SURVIVE THE INFINITE</div><button id="start-btn">I'M READY</button></div>
+        <div class="menu-box">
+            <h1>SHADOW<br>EVOLUTION</h1>
+            <div class="subtitle">SURVIVE THE INFINITE</div>
+            <button id="start-btn">I'M READY</button>
+        </div>
     </div>
     <div id="game-over-screen" class="hidden">
-        <div class="menu-box" style="border-color: #f33; box-shadow: 0 0 30px rgba(255,50,50,0.2);">
-            <h1 style="color: #f33;">FALLEN</h1><p id="final-score" style="margin: 20px 0;">DISTANCE: 0m</p><button id="restart-btn" style="border-color: #f33; color: #f33;">RESPAWN</button>
+        <div class="menu-box" style="border-color: #ff3333; box-shadow: 0 0 30px rgba(255, 50, 50, 0.2);">
+            <h1 style="text-shadow: 3px 3px 0 #880000, -3px -3px 0 #ff8888; color: #ff3333;">FALLEN</h1>
+            <p id="final-score" style="font-size: 14px; color: #fff; margin: 20px 0; transform: skewX(10deg);">DISTANCE: 0m</p>
+            <button id="restart-btn" style="border-color: #ff3333; color: #ff3333;">RESPAWN</button>
+            <style>
+                #restart-btn:hover { background: #ff3333; color: white; box-shadow: 0 0 25px rgba(255, 50, 50, 0.6); }
+            </style>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIG & ASSETS ---
         const SPRITE_CONFIG = {
             hero: { idle: {src:'hero_idle.png',frames:6}, run: {src:'hero_run.png',frames:8}, jump: {src:'hero_jump.png',frames:4}, dash: {src:'hero_dash.png',frames:4}, attack_1: {src:'hero_attack_1.png',frames:8}, attack_2: {src:'hero_attack_2.png',frames:3}, attack_3: {src:'hero_attack_3.png',frames:5}, skill: {src:'hero_skill.png',frames:3}, plunge: {src:'hero_plunge.png',frames:1} },
             enemy: { idle: {src:'enemy_idle.png',frames:4}, walk: {src:'enemy_walk.png',frames:6}, attack: {src:'enemy_attack.png',frames:5} },
@@ -191,7 +212,7 @@
             draw(ctx, cx, cy) {
                 if (this.dead) return;
                 let info = assets.effects.impact;
-                if (info && info.img && info.img.complete && info.img.naturalWidth !== 0) {
+                if (info && info.img.complete && info.img.naturalWidth !== 0) {
                     let f = Math.floor(this.timer);
                     if (f >= info.frames) f = info.frames - 1;
                     let sw = info.img.width / info.frames;
@@ -378,8 +399,10 @@
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
                     else if (!assets.medium_enemy[this.state] || !assets.medium_enemy[this.state].img.complete) ctx.filter = 'hue-rotate(-50deg) brightness(0.8)';
                     let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
-                    let vy = (this.h / 2) - dsz;
-                    ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
+                    // FIX: Bottom align calculation
+                    let drawY = (this.h / 2) - dsz;
+                    
+                    ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, drawY, dsz, dsz);
                     ctx.restore();
                     let hr = this.hp / this.maxHp;
                     let by = dy + this.h - dsz - 5 - 20; 
@@ -392,6 +415,7 @@
                 this.hp -= a;
                 if (this.hp <= 0) {
                     this.hp = 0; this.dead = true; score += 2; 
+                    // 【新增】中型怪死后生成 10 个灵魂
                     for(let i=0; i<10; i++) souls.push(new Soul(this.x + this.w/2, this.y + this.h/2, 2));
                     killStreak += 2;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
@@ -435,22 +459,29 @@
                     let f = Math.floor(this.gameFrame / 10) % info.frames;
                     ctx.save(); ctx.translate(dx + this.w / 2, dy + this.h / 2); if (!this.facingRight) ctx.scale(-1, 1);
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
-                    let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
-                    // FIX: Bottom align
+                    
+                    let sw = info.img.width / info.frames; 
+                    let dsz = sw * this.spriteScale;
+                    
+                    // 【修正】底部严格对齐：(碰撞箱高度 / 2) - 贴图高度
                     let vy = (this.h / 2) - dsz;
+                    
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
                     ctx.restore();
+                    
                     let hr = this.hp / this.maxHp;
-                    let by = dy + this.h - dsz - 5 - 12;
-                    if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) by += this.currentPlatform.depressionOffset;
-                    ctx.fillStyle = 'red'; ctx.fillRect(dx, by, 60, 8);
-                    ctx.fillStyle = hr < 0.2 ? '#f00' : (hr < 0.5 ? '#ff0' : '#0f0'); ctx.fillRect(dx, by, 60 * hr, 8);
+                    let barY = dy + this.h - dsz - 5 - 12;
+                    if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) barY += this.currentPlatform.depressionOffset;
+                    
+                    ctx.fillStyle = 'red'; ctx.fillRect(dx, barY, 60, 8);
+                    ctx.fillStyle = hr < 0.2 ? '#f00' : (hr < 0.5 ? '#ff0' : '#0f0'); ctx.fillRect(dx, barY, 60 * hr, 8);
                 }
             }
             takeDamage(a) {
                 this.hp -= a;
                 if (this.hp <= 0) {
                     this.hp = 0; this.dead = true; score++; 
+                    // 【新增】小怪死后生成 5 个灵魂
                     for(let i=0; i<5; i++) souls.push(new Soul(this.x + this.w/2, this.y + this.h/2, 2));
                     killStreak++;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
@@ -464,7 +495,9 @@
             draw(ctx, cx, cy) {
                 if (this.opened) return;
                 let dy = this.y - cy;
-                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) dy += this.currentPlatform.depressionOffset;
+                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) {
+                    dy += this.currentPlatform.depressionOffset;
+                }
                 ctx.fillStyle = this.color; ctx.fillRect(this.x - cx, dy, this.w, this.h);
                 ctx.fillStyle = '#000'; ctx.fillRect(this.x - cx + 15, dy + 15, 10, 10);
             }
@@ -496,7 +529,9 @@
             draw(ctx, cx, cy) {
                 if (this.dead) return;
                 let dy = this.y - cy;
-                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) dy += this.currentPlatform.depressionOffset;
+                if (this.grounded && this.currentPlatform && this.currentPlatform.depressionOffset > 0) {
+                    dy += this.currentPlatform.depressionOffset;
+                }
                 ctx.fillStyle = this.color; ctx.fillRect(this.x - cx, dy, this.w, this.h);
                 ctx.fillStyle = '#fff'; ctx.fillRect(this.x - cx + 8, dy + 4, 4, 12); ctx.fillRect(this.x - cx + 4, dy + 8, 12, 4);
             }
@@ -530,7 +565,7 @@
                 this.energy = 0;
                 camera.shake = 20;
                 floatingTexts.push(new FloatingText(this.x, this.y - 100, "FRENZY MODE!", "#d0f", 40));
-                document.getElementById('energy-text').style.display = 'flex';
+                document.getElementById('energy-text').style.display = 'block';
                 document.getElementById('frenzy-overlay').style.opacity = 1;
                 this.hp = Math.min(this.hp + this.maxHp * 0.3, this.maxHp);
             }
