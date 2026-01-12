@@ -2,33 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 优化视口设置，禁止缩放，适配刘海屏 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- iOS/Android Web App 全屏设置 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <title>Shadow Prisoner: Infinite Run</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; background-color: #0d0d15; color: #fff; font-family: 'Press Start 2P', cursive; touch-action: none; }
+        /* 全局禁止选中和长按菜单，提升手感 */
+        * {
+            -webkit-touch-callout: none; /* 禁止长按弹出菜单 */
+            -webkit-user-select: none;   /* 禁止选中文字 */
+            user-select: none;
+            -webkit-tap-highlight-color: transparent; /* 禁止点击高亮 */
+        }
+
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #0d0d15; 
+            color: #fff; 
+            font-family: 'Press Start 2P', cursive; 
+            touch-action: none; /* 关键：禁止浏览器处理触摸手势 */
+        }
         canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+        
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
         .hud { padding: 20px; text-shadow: 2px 2px 0 #000; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; }
-        .hud-left { display: flex; flex-direction: column; }
+        .hud-left { display: flex; flex-direction: column; gap: 5px; }
         .hud-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+        
         #health-bar-container { width: 300px; height: 30px; background: #333; border: 4px solid #555; margin-bottom: 5px; transform: skewX(-15deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
         #health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4444, #ff0000); box-shadow: 0 0 10px #ff0000; transition: width 0.1s; }
-        #energy-bar-container { width: 250px; height: 15px; background: #222; border: 2px solid #444; transform: skewX(-15deg); position: relative; overflow: hidden; margin-top: 5px; }
+        
+        #energy-bar-container { width: 250px; height: 15px; background: #222; border: 2px solid #444; transform: skewX(-15deg); position: relative; overflow: hidden; }
         #energy-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #aa00ff, #5500aa); box-shadow: 0 0 10px #aa00ff; transition: width 0.1s; }
-        #energy-text { position: absolute; top: -18px; left: 0; font-size: 10px; color: #d0f; text-shadow: 0 0 5px #d0f; display: none; }
+        #energy-text { position: absolute; top: -20px; left: 0; font-size: 10px; color: #d0f; text-shadow: 0 0 5px #d0f; display: none; width: 100%; text-align: center; }
+
         #cells-count { color: #00ffff; font-size: 16px; margin-top: 10px; letter-spacing: 1px; }
         #status-panel { margin-top: 15px; font-size: 12px; color: #00ff00; line-height: 1.5; }
         #dist-display { font-size: 20px; color: #fff; margin-bottom: 5px; }
         #danger-display { font-size: 16px; color: #ff4444; margin-bottom: 20px; }
         
-        /* 默认技能图标位置（桌面端：右下角） */
         #skill-container { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; }
         #skill-icon { width: 60px; height: 60px; border: 4px solid #00ffff; background: rgba(0, 255, 255, 0.2); display: flex; justify-content: center; align-items: center; font-size: 30px; color: #00ffff; border-radius: 10px; position: relative; box-shadow: 0 0 15px #00ffff; transition: all 0.2s; text-shadow: 0 0 5px #fff; }
         #skill-icon.cooldown { border-color: #555; background: rgba(0,0,0,0.5); color: #555; box-shadow: none; text-shadow: none; }
         #skill-timer { position: absolute; font-size: 20px; color: #fff; font-weight: bold; }
         #skill-label { margin-top: 5px; font-size: 10px; color: #ccc; text-shadow: 1px 1px 0 #000; }
-
+        
         .desktop-hint { color: #888; position: absolute; bottom: 10px; left: 10px; font-size: 10px; line-height: 1.5; z-index: 6; }
         #start-screen, #game-over-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; pointer-events: auto; overflow: hidden; }
         #game-over-screen { background: rgba(10, 5, 20, 0.7); backdrop-filter: blur(2px); }
@@ -36,14 +61,14 @@
         .hero-art { position: absolute; bottom: 0; left: 2%; height: 85vh; width: auto; max-width: 45vw; object-fit: contain; filter: drop-shadow(0 0 30px rgba(160, 32, 240, 0.3)); animation: floatHero 6s ease-in-out infinite; z-index: 2; }
         .boss-art { position: absolute; bottom: 0; right: 2%; height: 90vh; width: auto; max-width: 45vw; object-fit: contain; filter: drop-shadow(0 0 30px rgba(255, 50, 50, 0.4)); animation: floatBoss 7s ease-in-out infinite; z-index: 2; }
         .scene-art { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; mix-blend-mode: normal; z-index: 0; }
+        
         #damage-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%); opacity: 0; pointer-events: none; transition: opacity 0.1s; z-index: 5; mix-blend-mode: overlay; }
         #frenzy-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 30%, rgba(120, 0, 200, 0.4) 100%); opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 4; mix-blend-mode: hard-light; }
-        #orientation-lock { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; flex-direction: column; justify-content: center; align-items: center; color: #fff; text-align: center; }
-        #orientation-lock span { font-size: 40px; margin-bottom: 20px; animation: rotatePhone 2s infinite; }
-        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 25% { transform: rotate(90deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(0deg); } }
+
         @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } 50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), inset 0 0 10px rgba(0, 255, 255, 0.2); border-color: #00ffff; color: #00ffff; text-shadow: 0 0 10px #00ffff; transform: skewX(10deg) scale(1.05); } 100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } }
         @keyframes floatHero { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes floatBoss { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
         .menu-box { position: relative; padding: 40px 80px; border: 2px solid rgba(160, 32, 240, 0.5); background: rgba(0, 0, 0, 0.85); transform: skewX(-10deg); text-align: center; box-shadow: 0 0 30px rgba(160, 32, 240, 0.2); z-index: 10; backdrop-filter: blur(5px); }
         .menu-box::before, .menu-box::after { content: ''; position: absolute; width: 20px; height: 20px; border: 4px solid #00ffff; transition: all 0.3s; }
         .menu-box::before { top: -4px; left: -4px; border-right: none; border-bottom: none; }
@@ -63,22 +88,17 @@
         .ctrl-btn { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; user-select: none; }
         .skill-btn-mobile { border-color: #00ffff; color: #00ffff; }
         
-        @media only screen and (orientation: portrait) { #orientation-lock { display: flex; } }
-        /* 移动端适配：调整技能图标位置，避免重叠 */
-        @media (hover: none) and (pointer: coarse) { 
-            #mobile-controls { display: block; } 
-            .desktop-hint { display: none; } 
-            /* 将技能图标移到右上角，防止遮挡按键 */
-            #skill-container { bottom: auto; top: 100px; right: 20px; transform: scale(0.8); }
-        }
+        /* 优化媒体查询，确保在触摸设备上显示控件 */
+        @media (hover: none) and (pointer: coarse) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
+        /* 有些老旧设备可能不识别 pointer: coarse，补充一个基于宽度的查询作为后备 */
+        @media screen and (max-width: 768px) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
     <div id="damage-overlay"></div>
     <div id="frenzy-overlay"></div>
-    <div id="orientation-lock"><span>📱</span><p>PLEASE ROTATE DEVICE</p></div>
-
+    
     <div id="ui-layer">
         <div class="hud">
             <div class="hud-left">
@@ -117,6 +137,7 @@
             <button id="start-btn">I'M READY</button>
         </div>
     </div>
+
     <div id="game-over-screen" class="hidden">
         <div class="menu-box" style="border-color: #ff3333; box-shadow: 0 0 30px rgba(255, 50, 50, 0.2);">
             <h1 style="text-shadow: 3px 3px 0 #880000, -3px -3px 0 #ff8888; color: #ff3333;">FALLEN</h1>
@@ -244,15 +265,15 @@
         }
 
         class Particle {
-            constructor(x, y, color, speed, size, life) { this.x = x; this.y = y; this.color = color; this.vx = (Math.random() - 0.5) * speed; this.vy = (Math.random() - 0.5) * speed; this.size = size * 1.5; this.life = life; this.maxLife = life; }
-            update() { this.x += this.vx; this.y += this.vy; this.life--; this.size *= 0.95; }
-            draw(ctx, cx, cy) { ctx.globalAlpha = this.life / this.maxLife; ctx.fillStyle = this.color; ctx.fillRect(this.x - cx, this.y - cy, this.size, this.size); ctx.globalAlpha = 1; }
+            constructor(x, y, c, s, sz, l) { this.x = x; this.y = y; this.c = c; this.vx = (Math.random() - 0.5) * s; this.vy = (Math.random() - 0.5) * s; this.sz = sz * 1.5; this.l = l; this.ml = l; }
+            update() { this.x += this.vx; this.y += this.vy; this.l--; this.sz *= 0.95; }
+            draw(ctx, cx, cy) { ctx.globalAlpha = this.l / this.ml; ctx.fillStyle = this.c; ctx.fillRect(this.x - cx, this.y - cy, this.sz, this.sz); ctx.globalAlpha = 1; }
         }
 
         class FloatingText {
-            constructor(x, y, t, c, s = 24) { this.x = x; this.y = y; this.t = t; this.c = c; this.life = 60; this.vy = -1; this.s = s; }
-            update() { this.y += this.vy; this.life--; }
-            draw(ctx, cx, cy) { ctx.globalAlpha = Math.max(0, this.life / 60); ctx.fillStyle = this.c; ctx.font = `${this.s}px 'Press Start 2P'`; ctx.fillText(this.t, this.x - cx, this.y - cy); ctx.globalAlpha = 1; }
+            constructor(x, y, t, c, s = 24) { this.x = x; this.y = y; this.t = t; this.c = c; this.l = 60; this.vy = -1; this.s = s; }
+            update() { this.y += this.vy; this.l--; }
+            draw(ctx, cx, cy) { ctx.globalAlpha = Math.max(0, this.l / 60); ctx.fillStyle = this.c; ctx.font = `${this.s}px 'Press Start 2P'`; ctx.fillText(this.t, this.x - cx, this.y - cy); ctx.globalAlpha = 1; }
         }
 
         class Entity {
@@ -399,10 +420,8 @@
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
                     else if (!assets.medium_enemy[this.state] || !assets.medium_enemy[this.state].img.complete) ctx.filter = 'hue-rotate(-50deg) brightness(0.8)';
                     let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
-                    // FIX: Bottom align calculation
-                    let drawY = (this.h / 2) - dsz;
-                    
-                    ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, drawY, dsz, dsz);
+                    let vy = (this.h / 2) - dsz;
+                    ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
                     ctx.restore();
                     let hr = this.hp / this.maxHp;
                     let by = dy + this.h - dsz - 5 - 20; 
@@ -415,7 +434,6 @@
                 this.hp -= a;
                 if (this.hp <= 0) {
                     this.hp = 0; this.dead = true; score += 2; 
-                    // 【新增】中型怪死后生成 10 个灵魂
                     for(let i=0; i<10; i++) souls.push(new Soul(this.x + this.w/2, this.y + this.h/2, 2));
                     killStreak += 2;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
@@ -462,8 +480,6 @@
                     
                     let sw = info.img.width / info.frames; 
                     let dsz = sw * this.spriteScale;
-                    
-                    // 【修正】底部严格对齐：(碰撞箱高度 / 2) - 贴图高度
                     let vy = (this.h / 2) - dsz;
                     
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
@@ -481,7 +497,6 @@
                 this.hp -= a;
                 if (this.hp <= 0) {
                     this.hp = 0; this.dead = true; score++; 
-                    // 【新增】小怪死后生成 5 个灵魂
                     for(let i=0; i<5; i++) souls.push(new Soul(this.x + this.w/2, this.y + this.h/2, 2));
                     killStreak++;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
@@ -582,7 +597,7 @@
                 enemies.forEach(e => { if (!e.dead && Math.abs((e.x + e.w / 2) - (this.x + this.w / 2)) < 300) { e.freeze(300); } });
                 floatingTexts.push(new FloatingText(this.x, this.y - 80, "FREEZE!", "#0ff", 30));
             }
-            update(plat, enemies) {
+            update(platforms, enemies) {
                 if (this.dead) return;
                 if (this.skillCooldown > 0) this.skillCooldown--;
                 if (this.invulnerableTimer > 0) this.invulnerableTimer--;
@@ -606,7 +621,7 @@
                 }
                 if (this.isSpawning) {
                     this.spawnTimer++; this.vx = 0; this.vy = 12; this.x += this.vx; this.y += this.vy;
-                    for (let p of plat) if (checkRectCollide(this, p)) {
+                    for (let p of platforms) if (checkRectCollide(this, p)) {
                         this.y = p.y - this.h; this.isSpawning = false; this.grounded = true;
                         createParticles(this.x + this.w / 2, this.y + this.h, '#0ff', 20, 50); camera.shake = 15;
                     }
@@ -616,10 +631,10 @@
                 if (this.grounded) { this.jumpCount = 0; if (this.dashCooldown > 0) this.dashCooldown--; }
                 if (this.attackCooldown > 0) this.attackCooldown--;
                 if (this.comboWindow > 0) this.comboWindow--;
-                super.update(plat); 
+                super.update(platforms); 
                 if (!this.prevGrounded && this.grounded) {
                     this.isLanding = true; this.landingTimer = 0; createParticles(this.x + this.w / 2, this.y + this.h, '#fff', 2, 4);
-                    if (this.isPlunging) { this.isPlunging = false; this.isLanding = false; this.performPlungeImpact(enemies, plat); }
+                    if (this.isPlunging) { this.isPlunging = false; this.isLanding = false; this.performPlungeImpact(enemies, platforms); }
                 }
                 if (keys.left || keys.right || keys.jump || keys.dash || keys.attack) this.isLanding = false;
                 if (!this.isDashing && !this.isSkillAnim && !this.isPlunging) {
@@ -650,7 +665,7 @@
                 }
                 if (this.isDashing) {
                     this.dashTimer--; this.vy = 0; this.x += this.vx;
-                    for (let p of plat) if (checkRectCollide(this, p)) { if (this.vx > 0) this.x = p.x - this.w; if (this.vx < 0) this.x = p.x + p.w; this.isDashing = false; this.vx = 0; }
+                    for (let p of platforms) if (checkRectCollide(this, p)) { if (this.vx > 0) this.x = p.x - this.w; if (this.vx < 0) this.x = p.x + p.w; this.isDashing = false; this.vx = 0; }
                     this.trail.push({ x: this.x, y: this.y, alpha: 0.6 }); createParticles(this.x + this.w / 2, this.y + this.h / 2, '#0ff', 5, 3);
                     if (this.dashTimer <= 0) { this.isDashing = false; this.vx *= 0.2; }
                 }
@@ -681,10 +696,10 @@
                 else this.state = 'idle';
                 document.getElementById('health-fill').style.width = `${(this.hp / this.maxHp) * 100}%`;
             }
-            performPlungeImpact(enemies, plat) {
+            performPlungeImpact(enemies, platforms) {
                 camera.shake = 20; impactEffects.push(new ImpactEffect(this.x + this.w / 2, this.y + this.h));
                 let fx = this.x + this.w / 2; let fy = this.y + this.h + 2;
-                for (let p of plat) if (fx >= p.x && fx <= p.x + p.w && fy >= p.y && fy <= p.y + 20) { p.depressionOffset = 5; p.depressionTimer = 120; }
+                for (let p of platforms) if (fx >= p.x && fx <= p.x + p.w && fy >= p.y && fy <= p.y + 20) { p.depressionOffset = 5; p.depressionTimer = 120; }
                 let rx = this.x + this.w / 2; let ry = this.y + this.h;
                 enemies.forEach(e => {
                     if (!e.dead) {
@@ -911,7 +926,19 @@
         window.addEventListener('keyup', e => { switch(e.code){ case 'KeyA':case 'ArrowLeft':keys.left=false;break; case 'KeyD':case 'ArrowRight':keys.right=false;break; case 'KeyW':case 'ArrowUp':keys.up=false;break; case 'KeyS':case 'ArrowDown':keys.down=false;break; case 'Space':case 'KeyK':keys.jump=false;break; case 'KeyJ':keys.attack=false;break; case 'KeyE':keys.skill=false;break; case 'ShiftLeft':case 'KeyL':keys.dash=false;break; } });
         window.addEventListener('mousedown', () => { if(gameState==='PLAYING')keys.attack=true; });
         window.addEventListener('mouseup', () => { if(gameState==='PLAYING')keys.attack=false; });
-        const setupTouch = (id, k) => { const el=document.getElementById(id); el.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=true;}); el.addEventListener('touchend',e=>{e.preventDefault();keys[k]=false;}); };
+        
+        // 关键修复：添加 {passive: false} 以确保 preventDefault 生效
+        const setupTouch = (id, k) => { 
+            const el = document.getElementById(id); 
+            el.addEventListener('touchstart', e => { 
+                e.preventDefault(); 
+                keys[k] = true; 
+            }, { passive: false }); 
+            el.addEventListener('touchend', e => { 
+                e.preventDefault(); 
+                keys[k] = false; 
+            }, { passive: false }); 
+        };
         setupTouch('btn-left','left'); setupTouch('btn-right','right'); setupTouch('btn-jump','jump'); setupTouch('btn-attack','attack'); setupTouch('btn-dash','dash'); setupTouch('btn-skill','skill');
     </script>
 </body>
