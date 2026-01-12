@@ -195,6 +195,12 @@
         const assets = { hero: {}, enemy: {}, medium_enemy: {}, bat: {}, effects: {} };
         const groundImage = new Image(); groundImage.src = 'ground.png';
         const bgImage = new Image(); bgImage.src = 'bg.png';
+        
+        // --- 新增：离屏 Canvas 用于生成准确的冰冻染色效果（解决方块问题） ---
+        const tintCanvas = document.createElement('canvas');
+        tintCanvas.width = 300; // 足够容纳最大敌人
+        tintCanvas.height = 300;
+        const tintCtx = tintCanvas.getContext('2d');
 
         function loadSprites() {
             const loadCategory = (category, targetObj) => { 
@@ -409,9 +415,27 @@
                     let f = Math.floor(this.gameFrame / 5) % info.frames;
                     ctx.save(); ctx.translate(this.x - cx + this.w / 2, this.y - cy + this.h / 2);
                     if (!this.facingRight) ctx.scale(-1, 1);
-                    if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
+                    
                     let sw = info.img.width / info.frames; let dw = sw * this.spriteScale; let dh = info.img.height * this.spriteScale;
+                    
+                    // 1. 先画原始怪（带滤镜）
+                    if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dw / 2, -dh / 2, dw, dh);
+                    ctx.filter = 'none';
+
+                    // 2. 如果冰冻，用离屏 Canvas 生成一个仅覆盖 Sprite 的纯青色图层
+                    if (this.frozen) {
+                        tintCtx.clearRect(0, 0, dw, dh);
+                        tintCtx.drawImage(info.img, f * sw, 0, sw, info.img.height, 0, 0, dw, dh);
+                        tintCtx.globalCompositeOperation = 'source-in';
+                        tintCtx.fillStyle = 'rgba(0, 255, 255, 0.6)';
+                        tintCtx.fillRect(0, 0, dw, dh);
+                        tintCtx.globalCompositeOperation = 'source-over';
+                        
+                        // 叠加上去
+                        ctx.drawImage(tintCanvas, 0, 0, dw, dh, -dw / 2, -dh / 2, dw, dh);
+                    }
+
                     ctx.restore();
                 } else { super.draw(ctx, cx, cy); }
             }
@@ -465,11 +489,28 @@
                 if (!has) { super.draw(ctx, cx, cy); } else {
                     let f = Math.floor(this.gameFrame / 15) % info.frames;
                     ctx.save(); ctx.translate(dx + this.w / 2, dy + this.h / 2); if (!this.facingRight) ctx.scale(-1, 1);
-                    if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
-                    else if (!assets.medium_enemy[this.state] || !assets.medium_enemy[this.state].img.complete) ctx.filter = 'hue-rotate(-50deg) brightness(0.8)';
+                    
                     let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
                     let vy = (this.h / 2) - dsz;
+                    
+                    // 1. 原图
+                    if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
+                    else if (!assets.medium_enemy[this.state] || !assets.medium_enemy[this.state].img.complete) ctx.filter = 'hue-rotate(-50deg) brightness(0.8)';
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
+                    ctx.filter = 'none';
+
+                    // 2. 冰冻遮罩 (Offscreen)
+                    if (this.frozen) {
+                        tintCtx.clearRect(0, 0, dsz, dsz);
+                        tintCtx.drawImage(info.img, f * sw, 0, sw, info.img.height, 0, 0, dsz, dsz);
+                        tintCtx.globalCompositeOperation = 'source-in';
+                        tintCtx.fillStyle = 'rgba(0, 255, 255, 0.6)';
+                        tintCtx.fillRect(0, 0, dsz, dsz);
+                        tintCtx.globalCompositeOperation = 'source-over';
+
+                        ctx.drawImage(tintCanvas, 0, 0, dsz, dsz, -dsz / 2, vy, dsz, dsz);
+                    }
+
                     ctx.restore();
                     let hr = this.hp / this.maxHp;
                     let by = dy + this.h - dsz - 5 - 20; 
@@ -529,7 +570,23 @@
                     let dsz = sw * this.spriteScale;
                     let vy = (this.h / 2) - dsz;
                     
+                    // 1. 原图
+                    if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
+                    ctx.filter = 'none';
+
+                    // 2. 冰冻遮罩 (Offscreen)
+                    if (this.frozen) {
+                        tintCtx.clearRect(0, 0, dsz, dsz);
+                        tintCtx.drawImage(info.img, f * sw, 0, sw, info.img.height, 0, 0, dsz, dsz);
+                        tintCtx.globalCompositeOperation = 'source-in';
+                        tintCtx.fillStyle = 'rgba(0, 255, 255, 0.6)';
+                        tintCtx.fillRect(0, 0, dsz, dsz);
+                        tintCtx.globalCompositeOperation = 'source-over';
+
+                        ctx.drawImage(tintCanvas, 0, 0, dsz, dsz, -dsz / 2, vy, dsz, dsz);
+                    }
+
                     ctx.restore();
                     
                     let hr = this.hp / this.maxHp;
