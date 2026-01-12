@@ -34,6 +34,10 @@
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
         .hud { padding: 20px; text-shadow: 2px 2px 0 #000; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; }
         .hud-left { display: flex; flex-direction: column; gap: 5px; }
+        
+        /* 新增：用于横向排列血条和技能的容器 */
+        .hud-row { display: flex; align-items: flex-start; }
+        
         .hud-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
         
         #health-bar-container { width: 300px; height: 30px; background: #333; border: 4px solid #555; margin-bottom: 5px; transform: skewX(-15deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
@@ -48,7 +52,22 @@
         #dist-display { font-size: 20px; color: #fff; margin-bottom: 5px; }
         #danger-display { font-size: 16px; color: #ff4444; margin-bottom: 20px; }
         
-        #skill-container { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; }
+        /* 修改：技能容器样式调整，移除绝对定位，改为相对布局 */
+        #skill-container { 
+            /* 原来的绝对定位被移除 */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            z-index: 20; 
+            pointer-events: auto; 
+            transition: opacity 0.3s; 
+            
+            /* 新增样式适配 Hud */
+            margin-left: 15px;
+            transform: skewX(-15deg); /* 保持倾斜风格 */
+            margin-top: -5px;
+        }
+        
         #skill-icon { width: 60px; height: 60px; border: 4px solid #00ffff; background: rgba(0, 255, 255, 0.2); display: flex; justify-content: center; align-items: center; font-size: 30px; color: #00ffff; border-radius: 10px; position: relative; box-shadow: 0 0 15px #00ffff; transition: all 0.2s; text-shadow: 0 0 5px #fff; }
         #skill-icon.cooldown { border-color: #555; background: rgba(0,0,0,0.5); color: #555; box-shadow: none; text-shadow: none; }
         #skill-timer { position: absolute; font-size: 20px; color: #fff; font-weight: bold; }
@@ -92,6 +111,8 @@
         @media (hover: none) and (pointer: coarse) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
         /* 有些老旧设备可能不识别 pointer: coarse，补充一个基于宽度的查询作为后备 */
         @media screen and (max-width: 768px) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
+        /* 针对小屏幕手机，稍微缩短血条以防止技能图标溢出 */
+        @media screen and (max-width: 400px) { #health-bar-container { width: 200px; } #energy-bar-container { width: 160px; } }
     </style>
 </head>
 <body>
@@ -102,7 +123,16 @@
     <div id="ui-layer">
         <div class="hud">
             <div class="hud-left">
-                <div id="health-bar-container"><div id="health-fill"></div></div>
+                <!-- 将血条和技能图标放在同一行 -->
+                <div class="hud-row">
+                    <div id="health-bar-container"><div id="health-fill"></div></div>
+                    <!-- 技能图标被移到这里，位于血条右侧 -->
+                    <div id="skill-container" class="hidden">
+                        <div id="skill-icon"><span>❄️</span><div id="skill-timer"></div></div>
+                        <div id="skill-label">FREEZE (E)</div>
+                    </div>
+                </div>
+                
                 <div id="energy-bar-container"><div id="energy-fill"></div><div id="energy-text">FRENZY MODE!</div></div>
                 <div id="cells-count">KILLS: 0</div>
                 <div id="status-panel">ATK SPEED: 100%<br>MOV SPEED: 100%</div>
@@ -112,15 +142,19 @@
                 <div id="danger-display">DANGER: 1.0x</div>
             </div>
         </div>
-        <div id="skill-container" class="hidden">
-            <div id="skill-icon"><span>❄️</span><div id="skill-timer"></div></div>
-            <div id="skill-label">FREEZE (E)</div>
-        </div>
+        
+        <!-- 原来的 skill-container 位置已删除，移入 hud-left -->
+        
         <div class="desktop-hint">
             WASD/ARROWS: MOVE | SPACE/K: JUMP | J/CLICK: ATTACK | DOWN+J: PLUNGE | E: FREEZE | SHIFT: DASH
         </div>
         <div id="mobile-controls">
-            <div class="d-pad"><div class="ctrl-btn" id="btn-left">←</div><div class="ctrl-btn" id="btn-right">→</div></div>
+            <!-- 修改：添加向下按钮 -->
+            <div class="d-pad">
+                <div class="ctrl-btn" id="btn-left">←</div>
+                <div class="ctrl-btn" id="btn-down">↓</div>
+                <div class="ctrl-btn" id="btn-right">→</div>
+            </div>
             <div class="action-pad"><div class="ctrl-btn skill-btn-mobile" id="btn-skill">❄️</div><div class="ctrl-btn" id="btn-dash">⚡</div><div class="ctrl-btn large-btn" id="btn-attack">⚔️</div><div class="ctrl-btn" id="btn-jump">▲</div></div>
         </div>
     </div>
@@ -940,6 +974,8 @@
             }, { passive: false }); 
         };
         setupTouch('btn-left','left'); setupTouch('btn-right','right'); setupTouch('btn-jump','jump'); setupTouch('btn-attack','attack'); setupTouch('btn-dash','dash'); setupTouch('btn-skill','skill');
+        // 添加向下按键的触摸绑定
+        setupTouch('btn-down', 'down');
     </script>
 </body>
 </html>
