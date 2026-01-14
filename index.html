@@ -102,22 +102,78 @@
         /* 这里的 menu-box 样式保留但因为 HTML 移除已不再显示 */
         .menu-box { position: relative; padding: 40px 80px; border: 2px solid rgba(160, 32, 240, 0.5); background: rgba(0, 0, 0, 0.85); transform: skewX(-10deg); text-align: center; box-shadow: 0 0 30px rgba(160, 32, 240, 0.2); z-index: 10; backdrop-filter: blur(5px); }
         
-        /* 修改：开始按钮样式（作为图片） */
+        /* --- 加载条相关样式 Start --- */
+        #loading-box {
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 300px;
+            z-index: 25;
+            text-align: center;
+        }
+
+        #loading-text {
+            color: #00ffff;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #00ffff;
+            letter-spacing: 2px;
+            animation: blinkText 1s infinite;
+        }
+
+        @keyframes blinkText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        #loading-bar-border {
+            width: 100%;
+            height: 20px;
+            border: 2px solid #00ffff;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            padding: 2px;
+            transform: skewX(-15deg);
+        }
+
+        #loading-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #00aaaa,
+                #00aaaa 10px,
+                #00ffff 10px,
+                #00ffff 20px
+            );
+            box-shadow: 0 0 10px #00ffff;
+            transition: width 0.2s ease-out;
+        }
+
+        /* 开始按钮默认隐藏，等待JS控制显示 */
         #start-btn { 
+            display: none; /* 初始隐藏 */
             cursor: pointer; 
             z-index: 20; 
-            /* 设置一个合理的最大宽度，防止图片太大 */
             max-width: 200px;
             width: 40vw;
             height: auto;
-            /* 应用闪烁动画 */
             animation: buttonFlash 1.5s infinite ease-in-out;
             transition: all 0.1s;
-            /* 确保图片不会被选中 */
             -webkit-user-drag: none;
-            /* 位置调整 */
             margin-top: 30vh;
         }
+
+        /* 按钮出现时的淡入动画 */
+        .fade-in {
+            animation: fadeIn 0.5s forwards, buttonFlash 1.5s infinite ease-in-out !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        /* --- 加载条相关样式 End --- */
         
         /* 修改：按钮点击效果（颜色变化） */
         #start-btn:active { 
@@ -271,7 +327,17 @@
             <img src="hero.gif" class="hero-art" alt="" onerror="this.style.display='none'">
             <img src="boss.gif" class="boss-art" alt="" onerror="this.style.display='none'">
         </div>
+        
+        <!-- 新增：加载进度条区域 -->
+        <div id="loading-box">
+            <div id="loading-text">INITIALIZING... 0%</div>
+            <div id="loading-bar-border">
+                <div id="loading-bar-fill"></div>
+            </div>
+        </div>
+
         <!-- 修改：移除了文字标题和边框，替换为自定义图片按钮 -->
+        <!-- 注意：CSS 中已经默认设置 display: none，等待加载完毕后显示 -->
         <img id="start-btn" src="button.png" alt="Start Game">
     </div>
 
@@ -295,19 +361,66 @@
             effects: { grenade: {src:'grenade.png',frames:3}, explosion: {src:'explosion.png',frames:8}, impact: {src:'effect_impact.png',frames:6} }
         };
         const assets = { hero: {}, enemy: {}, medium_enemy: {}, bat: {}, effects: {} };
-        const groundImage = new Image(); groundImage.src = 'ground.png';
-        const bgImage = new Image(); bgImage.src = 'bg.png';
+        const groundImage = new Image(); 
+        const bgImage = new Image(); 
         
-        // --- 新增：离屏 Canvas 用于生成准确的冰冻染色效果（解决方块问题） ---
-        const tintCanvas = document.createElement('canvas');
-        tintCanvas.width = 300; // 足够容纳最大敌人
-        tintCanvas.height = 300;
-        const tintCtx = tintCanvas.getContext('2d');
+        // --- 资源加载与进度条逻辑 Start ---
+        let assetsLoadedCount = 0;
+        let totalAssetsCount = 0;
+        // 计算需要加载的图片总数 (SPRITE_CONFIG中的所有条目 + groundImage + bgImage)
+        totalAssetsCount = 2; // 先加上地面和背景
+        for (const cat in SPRITE_CONFIG) {
+            totalAssetsCount += Object.keys(SPRITE_CONFIG[cat]).length;
+        }
 
+        function updateLoadingProgress() {
+            assetsLoadedCount++;
+            // 计算百分比
+            const percent = Math.min(Math.floor((assetsLoadedCount / totalAssetsCount) * 100), 100);
+            
+            // 更新 UI
+            const barFill = document.getElementById('loading-bar-fill');
+            const loadText = document.getElementById('loading-text');
+            const loadBox = document.getElementById('loading-box');
+            const startBtn = document.getElementById('start-btn');
+
+            if (barFill) barFill.style.width = percent + '%';
+            if (loadText) loadText.innerText = `LOADING SYSTEM... ${percent}%`;
+
+            // 加载完成
+            if (assetsLoadedCount >= totalAssetsCount) {
+                // 稍微延迟一点点，让用户看到 100%
+                setTimeout(() => {
+                    if (loadBox) loadBox.style.display = 'none'; // 隐藏进度条
+                    if (startBtn) {
+                        startBtn.style.display = 'block'; // 显示开始按钮
+                        startBtn.classList.add('fade-in'); // 添加淡入效果
+                    }
+                }, 200);
+            }
+        }
+
+        // 创建一个通用的加载回调函数，无论成功还是失败（防止卡死）都更新进度
+        const onAssetEvent = () => { updateLoadingProgress(); };
+
+        // 绑定 ground 和 bg 的加载事件
+        groundImage.onload = onAssetEvent; groundImage.onerror = onAssetEvent;
+        bgImage.onload = onAssetEvent; bgImage.onerror = onAssetEvent;
+
+        // 设置源地址（一定要在绑定事件之后）
+        groundImage.src = 'ground.png';
+        bgImage.src = 'bg.png';
+
+        // 绑定 SPRITE_CONFIG 中所有图片的加载事件
         function loadSprites() {
             const loadCategory = (category, targetObj) => { 
                 for (const [key, config] of Object.entries(category)) { 
-                    const img = new Image(); img.src = config.src; 
+                    const img = new Image(); 
+                    // 先绑定事件
+                    img.onload = onAssetEvent;
+                    img.onerror = onAssetEvent;
+                    // 再赋值 src
+                    img.src = config.src; 
                     targetObj[key] = { img, frames: config.frames }; 
                 } 
             };
@@ -318,6 +431,14 @@
             loadCategory(SPRITE_CONFIG.effects, assets.effects);
         }
         loadSprites();
+        // --- 资源加载与进度条逻辑 End ---
+
+        
+        // --- 新增：离屏 Canvas 用于生成准确的冰冻染色效果（解决方块问题） ---
+        const tintCanvas = document.createElement('canvas');
+        tintCanvas.width = 300; // 足够容纳最大敌人
+        tintCanvas.height = 300;
+        const tintCtx = tintCanvas.getContext('2d');
 
         const CONFIG = { gravity: 0.8, friction: 0.85, playerSpeed: 9, jumpForce: 21, dashSpeed: 30, dashDuration: 12, colors: { player: '#a020f0', enemy: '#50a030', enemyMedium: '#a03030', bg: '#0d0d15', platform: '#1a1a2e', platformHighlight: '#333355' } };
         const canvas = document.getElementById('gameCanvas');
