@@ -29,14 +29,12 @@
             font-family: 'Press Start 2P', cursive; 
             touch-action: none; /* 关键：禁止浏览器处理触摸手势 */
         }
-        /* 修改：添加 width/height 100% 确保 Canvas 视觉上适配屏幕，同时允许内部由 JS 设置更高的分辨率来扩大视野 */
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
         
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
         .hud { padding: 20px; text-shadow: 2px 2px 0 #000; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; }
         .hud-left { display: flex; flex-direction: column; gap: 5px; }
         
-        /* 新增：用于横向排列血条和技能的容器 */
         .hud-row { display: flex; align-items: flex-start; }
         
         .hud-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
@@ -53,19 +51,15 @@
         #dist-display { font-size: 20px; color: #fff; margin-bottom: 5px; }
         #danger-display { font-size: 16px; color: #ff4444; margin-bottom: 20px; }
         
-        /* 修改：技能容器样式调整，移除绝对定位，改为相对布局 */
         #skill-container { 
-            /* 原来的绝对定位被移除 */
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             z-index: 20; 
             pointer-events: auto; 
             transition: opacity 0.3s; 
-            
-            /* 新增样式适配 Hud */
             margin-left: 15px;
-            transform: skewX(-15deg); /* 保持倾斜风格 */
+            transform: skewX(-15deg); 
             margin-top: -5px;
         }
         
@@ -75,34 +69,171 @@
         #skill-label { margin-top: 5px; font-size: 10px; color: #ccc; text-shadow: 1px 1px 0 #000; }
         
         .desktop-hint { color: #888; position: absolute; bottom: 10px; left: 10px; font-size: 10px; line-height: 1.5; z-index: 6; }
-        #start-screen, #game-over-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; pointer-events: auto; overflow: hidden; }
-        #game-over-screen { background: rgba(10, 5, 20, 0.7); backdrop-filter: blur(2px); }
+        
+        /* Start Screen 保持原样 */
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; pointer-events: auto; overflow: hidden; }
+        
+        /* ==========================================================================
+           CYBERPUNK GAME OVER STYLES (NEW)
+           ========================================================================== */
+        #game-over-screen { 
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 100; pointer-events: auto; overflow: hidden; 
+            
+            /* 深色赛博背景 + 网格叠加 */
+            background-color: #050510;
+            background-image: 
+                linear-gradient(rgba(0, 20, 20, 0.8), rgba(0, 10, 10, 0.9)),
+                repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 255, 255, 0.05) 1px, rgba(0, 255, 255, 0.05) 2px);
+            backdrop-filter: blur(5px);
+        }
+
+        /* 扫描线动画覆盖层 */
+        .scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            animation: scrollScanlines 10s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        /* 赛博朋克风格的主容器 */
+        .cyber-box {
+            position: relative;
+            padding: 40px 60px;
+            background: rgba(10, 15, 20, 0.85);
+            border: 2px solid #00f3ff;
+            /* 霓虹发光效果 */
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 30px rgba(0, 243, 255, 0.1);
+            transform: skewX(-5deg);
+            text-align: center;
+            z-index: 10;
+            /* 科技感的多边形裁剪 */
+            clip-path: polygon(
+                10% 0, 100% 0, 
+                100% 85%, 90% 100%, 
+                0 100%, 0 15%
+            );
+        }
+
+        /* 装饰用的角落线条 */
+        .cyber-box::before {
+            content: ''; position: absolute; top: 5px; left: 5px; width: 20px; height: 20px;
+            border-top: 3px solid #ff00ff; border-left: 3px solid #ff00ff;
+        }
+        .cyber-box::after {
+            content: ''; position: absolute; bottom: 5px; right: 5px; width: 20px; height: 20px;
+            border-bottom: 3px solid #ff00ff; border-right: 3px solid #ff00ff;
+        }
+
+        /* 故障文字效果 */
+        .cyber-title {
+            font-size: 48px;
+            color: #fff;
+            margin: 0;
+            text-transform: uppercase;
+            position: relative;
+            text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00f3ff;
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+            letter-spacing: 4px;
+        }
+
+        .cyber-title::before, .cyber-title::after {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #050510; 
+        }
+        .cyber-title::before {
+            left: 2px; text-shadow: -1px 0 #ff00ff;
+            clip-path: inset(0 0 0 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        .cyber-title::after {
+            left: -2px; text-shadow: -1px 0 #00f3ff;
+            clip-path: inset(0 0 0 0);
+            animation: glitch-anim-2 2s infinite linear alternate-reverse;
+        }
+
+        .cyber-divider {
+            width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #00f3ff, transparent);
+            margin: 20px 0;
+            box-shadow: 0 0 10px #00f3ff;
+        }
+
+        .cyber-stat {
+            font-size: 16px; color: #fsee00; margin: 20px 0;
+            letter-spacing: 2px; text-shadow: 0 0 8px rgba(247, 238, 0, 0.6);
+            transform: skewX(5deg); /* 反向倾斜文字以保持直立 */
+        }
+
+        /* 赛博朋克按钮 */
+        .cyber-btn {
+            background: transparent;
+            border: 2px solid #ff00ff;
+            color: #ff00ff;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            position: relative;
+            transition: 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+            /* 切角按钮 */
+            clip-path: polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%);
+        }
+
+        .cyber-btn:hover {
+            background: #ff00ff;
+            color: #000;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.8), inset 0 0 10px #fff;
+            transform: scale(1.05);
+            text-shadow: none;
+        }
+        
+        .cyber-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 动画定义 */
+        @keyframes scrollScanlines { from { background-position: 0 0; } to { background-position: 0 100%; } }
+
+        @keyframes glitch-anim {
+            0% { text-shadow: 2px 2px #ff00ff, -2px -2px #00f3ff; transform: translate(0); }
+            20% { text-shadow: -2px 2px #ff00ff, 2px -2px #00f3ff; transform: translate(-2px, 2px); }
+            40% { text-shadow: 2px -2px #ff00ff, -2px 2px #00f3ff; transform: translate(2px, -2px); }
+            60% { text-shadow: -2px -2px #ff00ff, 2px 2px #00f3ff; transform: translate(-2px, -2px); }
+            80% { text-shadow: 2px 2px #ff00ff, -2px -2px #00f3ff; transform: translate(2px, 2px); }
+            100% { text-shadow: -2px 2px #ff00ff, 2px -2px #00f3ff; transform: translate(0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 80% 0); }
+            20% { clip-path: inset(80% 0 1% 0); }
+            40% { clip-path: inset(40% 0 20% 0); }
+            60% { clip-path: inset(10% 0 60% 0); }
+            80% { clip-path: inset(30% 0 30% 0); }
+            100% { clip-path: inset(70% 0 20% 0); }
+        }
+
         .art-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         .hero-art { position: absolute; bottom: 0; left: 2%; height: 85vh; width: auto; max-width: 45vw; object-fit: contain; filter: drop-shadow(0 0 30px rgba(160, 32, 240, 0.3)); animation: floatHero 6s ease-in-out infinite; z-index: 2; }
         .boss-art { position: absolute; bottom: 0; right: 2%; height: 90vh; width: auto; max-width: 45vw; object-fit: contain; filter: drop-shadow(0 0 30px rgba(255, 50, 50, 0.4)); animation: floatBoss 7s ease-in-out infinite; z-index: 2; }
-        
-        /* 修改：色彩亮度恢复正常，移除 opacity 限制 */
         .scene-art { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 1; mix-blend-mode: normal; z-index: 0; }
         
         #damage-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%); opacity: 0; pointer-events: none; transition: opacity 0.1s; z-index: 5; mix-blend-mode: overlay; }
         #frenzy-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 30%, rgba(120, 0, 200, 0.4) 100%); opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 4; mix-blend-mode: hard-light; }
 
         @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } 50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), inset 0 0 10px rgba(0, 255, 255, 0.2); border-color: #00ffff; color: #00ffff; text-shadow: 0 0 10px #00ffff; transform: skewX(10deg) scale(1.05); } 100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); border-color: #a020f0; color: #a020f0; transform: skewX(10deg) scale(1); } }
-        
-        /* 新增：自定义按钮的闪烁动画 */
-        @keyframes buttonFlash { 
-            0% { filter: brightness(1) drop-shadow(0 0 5px rgba(255,255,255,0.2)); transform: scale(1); } 
-            50% { filter: brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.6)); transform: scale(1.02); } 
-            100% { filter: brightness(1) drop-shadow(0 0 5px rgba(255,255,255,0.2)); transform: scale(1); } 
-        }
-
+        @keyframes buttonFlash { 0% { filter: brightness(1) drop-shadow(0 0 5px rgba(255,255,255,0.2)); transform: scale(1); } 50% { filter: brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.6)); transform: scale(1.02); } 100% { filter: brightness(1) drop-shadow(0 0 5px rgba(255,255,255,0.2)); transform: scale(1); } }
         @keyframes floatHero { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes floatBoss { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         
-        /* 这里的 menu-box 样式保留但因为 HTML 移除已不再显示 */
-        .menu-box { position: relative; padding: 40px 80px; border: 2px solid rgba(160, 32, 240, 0.5); background: rgba(0, 0, 0, 0.85); transform: skewX(-10deg); text-align: center; box-shadow: 0 0 30px rgba(160, 32, 240, 0.2); z-index: 10; backdrop-filter: blur(5px); }
-        
-        /* --- 加载条相关样式 Start --- */
         #loading-box {
             position: absolute;
             bottom: 25%;
@@ -150,9 +281,8 @@
             transition: width 0.2s ease-out;
         }
 
-        /* 开始按钮默认隐藏，等待JS控制显示 */
         #start-btn { 
-            display: none; /* 初始隐藏 */
+            display: none; 
             cursor: pointer; 
             z-index: 20; 
             max-width: 200px;
@@ -164,7 +294,6 @@
             margin-top: 30vh;
         }
 
-        /* 按钮出现时的淡入动画 */
         .fade-in {
             animation: fadeIn 0.5s forwards, buttonFlash 1.5s infinite ease-in-out !important;
         }
@@ -173,13 +302,11 @@
             from { opacity: 0; transform: scale(0.8); }
             to { opacity: 1; transform: scale(1); }
         }
-        /* --- 加载条相关样式 End --- */
         
-        /* 修改：按钮点击效果（颜色变化） */
         #start-btn:active { 
-            animation: none; /* 点击时暂停闪烁 */
-            filter: hue-rotate(90deg) brightness(0.8) !important; /* 颜色变化 */
-            transform: scale(0.9); /* 点击缩放效果 */
+            animation: none; 
+            filter: hue-rotate(90deg) brightness(0.8) !important; 
+            transform: scale(0.9); 
         }
 
         .hidden { display: none !important; }
@@ -190,15 +317,12 @@
         .ctrl-btn { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; user-select: none; }
         .skill-btn-mobile { border-color: #00ffff; color: #00ffff; }
         
-        /* 针对小屏幕手机，稍微缩短血条以防止技能图标溢出 */
         @media screen and (max-width: 400px) { #health-bar-container { width: 200px; } #energy-bar-container { width: 160px; } }
 
-        /* 新增：Dash (冲刺) 技能图标的自定义样式 - 三个重叠的蓝色方块 */
         .dash-icon-container {
             position: relative;
             width: 30px;
             height: 30px;
-            /* 用于辅助定位，确保内部方块居中 */
             margin-top: 4px;
             margin-left: 2px;
         }
@@ -208,56 +332,38 @@
             height: 14px;
             background: linear-gradient(135deg, rgba(0,255,255,0.4), rgba(0,255,255,0.9));
             border: 1px solid rgba(255,255,255,0.8);
-            transform: skewX(-15deg); /* 保持游戏整体的倾斜风格 */
+            transform: skewX(-15deg);
             box-shadow: 0 0 2px rgba(0,255,255,0.5);
         }
-        /* 第一个方块：最淡，最左 */
-        .dash-square:nth-child(1) {
-            left: 0px;
-            top: 8px;
-            opacity: 0.4;
-            z-index: 1;
-        }
-        /* 第二个方块：中等，中间 */
-        .dash-square:nth-child(2) {
-            left: 8px;
-            top: 8px;
-            opacity: 0.7;
-            z-index: 2;
-        }
-        /* 第三个方块：最亮，最右，带强发光 */
-        .dash-square:nth-child(3) {
-            left: 16px;
-            top: 8px;
-            opacity: 1.0;
-            z-index: 3;
-            box-shadow: 0 0 6px #00ffff;
-            background: linear-gradient(135deg, rgba(0,255,255,0.8), #fff);
-        }
+        .dash-square:nth-child(1) { left: 0px; top: 8px; opacity: 0.4; z-index: 1; }
+        .dash-square:nth-child(2) { left: 8px; top: 8px; opacity: 0.7; z-index: 2; }
+        .dash-square:nth-child(3) { left: 16px; top: 8px; opacity: 1.0; z-index: 3; box-shadow: 0 0 6px #00ffff; background: linear-gradient(135deg, rgba(0,255,255,0.8), #fff); }
 
-        /* 新增：Freeze (冰冻) 技能图标的自定义样式 - 发光的冰晶方块 */
+        /* 新增：雪花技能图标样式 */
         .freeze-icon {
-            width: 20px;
-            height: 20px;
-            background: rgba(0, 255, 255, 0.2);
-            border: 2px solid #00ffff;
-            transform: rotate(45deg);
-            box-shadow: 0 0 8px #00ffff, inset 0 0 5px rgba(0, 255, 255, 0.5);
+            width: 30px; 
+            height: 30px;
             position: relative;
+            animation: spinSlow 6s linear infinite;
         }
-        /* 内部的高光核心 */
-        .freeze-icon::after {
-            content: '';
+        .flake-line {
             position: absolute;
-            top: 5px; left: 5px; right: 5px; bottom: 5px;
-            background: #fff;
-            opacity: 0.8;
-            box-shadow: 0 0 4px #fff;
+            left: 50%;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: #00ffff;
+            border-radius: 2px;
+            box-shadow: 0 0 5px #00ffff;
+            transform: translateX(-50%);
         }
+        /* 三条线交叉形成雪花 */
+        .flake-line:nth-child(2) { transform: translateX(-50%) rotate(60deg); }
+        .flake-line:nth-child(3) { transform: translateX(-50%) rotate(-60deg); }
+        
+        @keyframes spinSlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 优化媒体查询，确保在触摸设备上显示控件 */
         @media (hover: none) and (pointer: coarse) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
-        /* 有些老旧设备可能不识别 pointer: coarse，补充一个基于宽度的查询作为后备 */
         @media screen and (max-width: 768px) { #mobile-controls { display: block; } .desktop-hint { display: none; } }
     </style>
 </head>
@@ -269,13 +375,18 @@
     <div id="ui-layer">
         <div class="hud">
             <div class="hud-left">
-                <!-- 将血条和技能图标放在同一行 -->
                 <div class="hud-row">
                     <div id="health-bar-container"><div id="health-fill"></div></div>
-                    <!-- 技能图标被移到这里，位于血条右侧 -->
                     <div id="skill-container" class="hidden">
-                        <!-- 修改：将字符替换为 CSS 图标 -->
-                        <div id="skill-icon"><div class="freeze-icon" style="transform: rotate(45deg) scale(0.8);"></div><div id="skill-timer"></div></div>
+                        <!-- 修改：更新为雪花HTML结构 -->
+                        <div id="skill-icon">
+                            <div class="freeze-icon">
+                                <div class="flake-line"></div>
+                                <div class="flake-line"></div>
+                                <div class="flake-line"></div>
+                            </div>
+                            <div id="skill-timer"></div>
+                        </div>
                         <div id="skill-label">FREEZE (E)</div>
                     </div>
                 </div>
@@ -290,24 +401,24 @@
             </div>
         </div>
         
-        <!-- 原来的 skill-container 位置已删除，移入 hud-left -->
-        
         <div class="desktop-hint">
             WASD/ARROWS: MOVE | SPACE/K: JUMP | J/CLICK: ATTACK | DOWN+J: PLUNGE | E: FREEZE | SHIFT: DASH
         </div>
         <div id="mobile-controls">
-            <!-- 修改：添加向下按钮 -->
             <div class="d-pad">
                 <div class="ctrl-btn" id="btn-left">←</div>
                 <div class="ctrl-btn" id="btn-down">↓</div>
                 <div class="ctrl-btn" id="btn-right">→</div>
             </div>
             <div class="action-pad">
-                <!-- 修改：Freeze 按钮图标改为 CSS 冰晶结构 -->
                 <div class="ctrl-btn skill-btn-mobile" id="btn-skill">
-                    <div class="freeze-icon"></div>
+                    <!-- 修改：更新为雪花HTML结构 -->
+                    <div class="freeze-icon">
+                        <div class="flake-line"></div>
+                        <div class="flake-line"></div>
+                        <div class="flake-line"></div>
+                    </div>
                 </div>
-                <!-- 修改：Dash 按钮图标改为三个蓝色方块结构 -->
                 <div class="ctrl-btn" id="btn-dash">
                     <div class="dash-icon-container">
                         <div class="dash-square"></div>
@@ -328,31 +439,84 @@
             <img src="boss.gif" class="boss-art" alt="" onerror="this.style.display='none'">
         </div>
         
-        <!-- 新增：加载进度条区域 -->
         <div id="loading-box">
             <div id="loading-text">INITIALIZING... 0%</div>
             <div id="loading-bar-border">
                 <div id="loading-bar-fill"></div>
             </div>
         </div>
-
-        <!-- 修改：移除了文字标题和边框，替换为自定义图片按钮 -->
-        <!-- 注意：CSS 中已经默认设置 display: none，等待加载完毕后显示 -->
         <img id="start-btn" src="button.png" alt="Start Game">
     </div>
 
+    <!-- ====================================================== -->
+    <!-- NEW CYBERPUNK GAME OVER SCREEN -->
+    <!-- ====================================================== -->
     <div id="game-over-screen" class="hidden">
-        <div class="menu-box" style="border-color: #ff3333; box-shadow: 0 0 30px rgba(255, 50, 50, 0.2);">
-            <h1 style="text-shadow: 3px 3px 0 #880000, -3px -3px 0 #ff8888; color: #ff3333;">FALLEN</h1>
-            <p id="final-score" style="font-size: 14px; color: #fff; margin: 20px 0; transform: skewX(10deg);">DISTANCE: 0m</p>
-            <button id="restart-btn" style="border-color: #ff3333; color: #ff3333;">RESPAWN</button>
-            <style>
-                #restart-btn:hover { background: #ff3333; color: white; box-shadow: 0 0 25px rgba(255, 50, 50, 0.6); }
-            </style>
+        <!-- 扫描线效果层 -->
+        <div class="scanlines"></div>
+        
+        <!-- 赛博朋克风格 UI 框 -->
+        <div class="cyber-box">
+            <!-- 故障风格标题，data-text 用于 CSS 伪元素动画 -->
+            <h1 class="cyber-title" data-text="TERMINATED">TERMINATED</h1>
+            
+            <div class="cyber-divider"></div>
+            
+            <p id="final-score" class="cyber-stat">DISTANCE: 0m</p>
+            
+            <button id="restart-btn" class="cyber-btn">REBOOT SYSTEM</button>
         </div>
     </div>
 
     <script>
+        // 音效配置
+        const AUDIO_CONFIG = {
+            bgm: 'bgm.mp3',
+            jump: 'jump.mp3',
+            attack: 'attack.mp3',
+            dash: 'dash.mp3',
+            damage: 'damage.mp3', // 玩家受伤
+            enemy_hit: 'enemy_death.mp3', // 敌人死亡或击中
+            collect: 'collect.mp3',
+            skill: 'skill.mp3',
+            game_over: 'game_over.mp3'
+        };
+
+        const AUDIO_CACHE = {};
+
+        // 初始化音效
+        function initAudio() {
+            for (const [key, src] of Object.entries(AUDIO_CONFIG)) {
+                const audio = new Audio(src);
+                if (key === 'bgm') audio.loop = true;
+                AUDIO_CACHE[key] = audio;
+            }
+        }
+        initAudio();
+
+        // 播放音效函数
+        function playSound(name) {
+            const audio = AUDIO_CACHE[name];
+            if (audio) {
+                if (name === 'bgm') {
+                    audio.play().catch(e => console.log('BGM Autoplay prevented'));
+                } else {
+                    // 克隆节点以支持重叠播放（例如快速攻击）
+                    const clone = audio.cloneNode();
+                    clone.volume = 0.6; // 设置音效音量
+                    clone.play().catch(e => {}); 
+                }
+            }
+        }
+
+        function stopSound(name) {
+            const audio = AUDIO_CACHE[name];
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }
+
         const SPRITE_CONFIG = {
             hero: { idle: {src:'hero_idle.png',frames:6}, run: {src:'hero_run.png',frames:8}, jump: {src:'hero_jump.png',frames:4}, dash: {src:'hero_dash.png',frames:4}, attack_1: {src:'hero_attack_1.png',frames:8}, attack_2: {src:'hero_attack_2.png',frames:3}, attack_3: {src:'hero_attack_3.png',frames:5}, skill: {src:'hero_skill.png',frames:3}, plunge: {src:'hero_plunge.png',frames:1} },
             enemy: { idle: {src:'enemy_idle.png',frames:4}, walk: {src:'enemy_walk.png',frames:6}, attack: {src:'enemy_attack.png',frames:5} },
@@ -364,21 +528,17 @@
         const groundImage = new Image(); 
         const bgImage = new Image(); 
         
-        // --- 资源加载与进度条逻辑 Start ---
         let assetsLoadedCount = 0;
         let totalAssetsCount = 0;
-        // 计算需要加载的图片总数 (SPRITE_CONFIG中的所有条目 + groundImage + bgImage)
-        totalAssetsCount = 2; // 先加上地面和背景
+        totalAssetsCount = 2; 
         for (const cat in SPRITE_CONFIG) {
             totalAssetsCount += Object.keys(SPRITE_CONFIG[cat]).length;
         }
 
         function updateLoadingProgress() {
             assetsLoadedCount++;
-            // 计算百分比
             const percent = Math.min(Math.floor((assetsLoadedCount / totalAssetsCount) * 100), 100);
             
-            // 更新 UI
             const barFill = document.getElementById('loading-bar-fill');
             const loadText = document.getElementById('loading-text');
             const loadBox = document.getElementById('loading-box');
@@ -387,39 +547,31 @@
             if (barFill) barFill.style.width = percent + '%';
             if (loadText) loadText.innerText = `LOADING SYSTEM... ${percent}%`;
 
-            // 加载完成
             if (assetsLoadedCount >= totalAssetsCount) {
-                // 稍微延迟一点点，让用户看到 100%
                 setTimeout(() => {
-                    if (loadBox) loadBox.style.display = 'none'; // 隐藏进度条
+                    if (loadBox) loadBox.style.display = 'none'; 
                     if (startBtn) {
-                        startBtn.style.display = 'block'; // 显示开始按钮
-                        startBtn.classList.add('fade-in'); // 添加淡入效果
+                        startBtn.style.display = 'block'; 
+                        startBtn.classList.add('fade-in'); 
                     }
                 }, 200);
             }
         }
 
-        // 创建一个通用的加载回调函数，无论成功还是失败（防止卡死）都更新进度
         const onAssetEvent = () => { updateLoadingProgress(); };
 
-        // 绑定 ground 和 bg 的加载事件
         groundImage.onload = onAssetEvent; groundImage.onerror = onAssetEvent;
         bgImage.onload = onAssetEvent; bgImage.onerror = onAssetEvent;
 
-        // 设置源地址（一定要在绑定事件之后）
         groundImage.src = 'ground.png';
         bgImage.src = 'bg.png';
 
-        // 绑定 SPRITE_CONFIG 中所有图片的加载事件
         function loadSprites() {
             const loadCategory = (category, targetObj) => { 
                 for (const [key, config] of Object.entries(category)) { 
                     const img = new Image(); 
-                    // 先绑定事件
                     img.onload = onAssetEvent;
                     img.onerror = onAssetEvent;
-                    // 再赋值 src
                     img.src = config.src; 
                     targetObj[key] = { img, frames: config.frames }; 
                 } 
@@ -431,12 +583,9 @@
             loadCategory(SPRITE_CONFIG.effects, assets.effects);
         }
         loadSprites();
-        // --- 资源加载与进度条逻辑 End ---
 
-        
-        // --- 新增：离屏 Canvas 用于生成准确的冰冻染色效果（解决方块问题） ---
         const tintCanvas = document.createElement('canvas');
-        tintCanvas.width = 300; // 足够容纳最大敌人
+        tintCanvas.width = 300; 
         tintCanvas.height = 300;
         const tintCtx = tintCanvas.getContext('2d');
 
@@ -458,17 +607,11 @@
         const keys = { left: false, right: false, up: false, down: false, jump: false, attack: false, dash: false, skill: false };
 
         function resize() { 
-            // 手机端优化：大幅增加目标渲染宽度，从而缩小画面元素，扩大视野
-            // 将基准宽度从 850 提升到 1300，这样角色在屏幕上的占比会显著变小，能看清更多深渊和地面
             const targetWidth = 1300; 
             let scale = window.innerWidth < targetWidth ? (targetWidth / window.innerWidth) : 1;
-            
-            // 稍微放宽最大缩放限制，适应高分辨率需求
             scale = Math.min(4.0, scale);
-
             width = canvas.width = window.innerWidth * scale; 
             height = canvas.height = window.innerHeight * scale; 
-            
             ctx.imageSmoothingEnabled = false; 
         }
         window.addEventListener('resize', resize); resize();
@@ -493,7 +636,12 @@
                     this.vx = this.vx * 0.8 + (dx / dist) * speed * 0.2;
                     this.vy = this.vy * 0.8 + (dy / dist) * speed * 0.2;
                     this.x += this.vx; this.y += this.vy;
-                    if (dist < 50) { player.addEnergy(this.amount); this.dead = true; createParticles(this.x, this.y, '#aa00ff', 5, 5); }
+                    if (dist < 50) { 
+                        player.addEnergy(this.amount); 
+                        this.dead = true; 
+                        playSound('collect'); // 播放收集音效
+                        createParticles(this.x, this.y, '#aa00ff', 5, 5); 
+                    }
                 }
             }
             draw(ctx, cx, cy) {
@@ -517,6 +665,46 @@
                     let sz = sw * 3;
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, this.x - cx - sz / 2, this.y - cy - sz + 20, sz, sz);
                 }
+            }
+        }
+
+        // 新增：攻击时的刀光特效类
+        class SlashEffect {
+            constructor(x, y, facingRight, isFrenzy) {
+                this.x = x; this.y = y; this.facingRight = facingRight;
+                this.life = 0; this.maxLife = 10; // 持续时间
+                this.color = isFrenzy ? '#d0f' : '#0ff';
+                this.width = 0;
+            }
+            update() { 
+                this.life++; 
+                // 刀光跟随方向稍微移动
+                this.x += this.facingRight ? 5 : -5; 
+                if(this.life >= this.maxLife) this.dead = true;
+            }
+            draw(ctx, cx, cy) {
+                if(this.dead) return;
+                let alpha = 1 - (this.life / this.maxLife);
+                ctx.save();
+                ctx.translate(this.x - cx, this.y - cy);
+                if (!this.facingRight) ctx.scale(-1, 1);
+                
+                ctx.globalAlpha = alpha;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                
+                // 绘制月牙形状的刀光
+                ctx.beginPath();
+                // 外弧
+                ctx.moveTo(0, -60);
+                ctx.quadraticCurveTo(60, 0, 0, 60);
+                // 内弧
+                ctx.quadraticCurveTo(40, 0, 0, -60);
+                ctx.fill();
+                
+                ctx.restore();
+                ctx.globalAlpha = 1;
             }
         }
 
@@ -641,12 +829,10 @@
                     
                     let sw = info.img.width / info.frames; let dw = sw * this.spriteScale; let dh = info.img.height * this.spriteScale;
                     
-                    // 1. 先画原始怪（带滤镜）
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dw / 2, -dh / 2, dw, dh);
                     ctx.filter = 'none';
 
-                    // 2. 如果冰冻，用离屏 Canvas 生成一个仅覆盖 Sprite 的纯青色图层
                     if (this.frozen) {
                         tintCtx.clearRect(0, 0, dw, dh);
                         tintCtx.drawImage(info.img, f * sw, 0, sw, info.img.height, 0, 0, dw, dh);
@@ -655,7 +841,6 @@
                         tintCtx.fillRect(0, 0, dw, dh);
                         tintCtx.globalCompositeOperation = 'source-over';
                         
-                        // 叠加上去
                         ctx.drawImage(tintCanvas, 0, 0, dw, dh, -dw / 2, -dh / 2, dw, dh);
                     }
 
@@ -670,7 +855,10 @@
                     killStreak++;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
                     document.getElementById('cells-count').innerText = "KILLS: " + score;
+                    playSound('enemy_hit'); // 播放敌人击中/死亡音效
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, '#500', 10, 20);
+                } else {
+                    playSound('enemy_hit'); // 受伤音效
                 }
             }
         }
@@ -716,13 +904,11 @@
                     let sw = info.img.width / info.frames; let dsz = sw * this.spriteScale;
                     let vy = (this.h / 2) - dsz;
                     
-                    // 1. 原图
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
                     else if (!assets.medium_enemy[this.state] || !assets.medium_enemy[this.state].img.complete) ctx.filter = 'hue-rotate(-50deg) brightness(0.8)';
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
                     ctx.filter = 'none';
 
-                    // 2. 冰冻遮罩 (Offscreen)
                     if (this.frozen) {
                         tintCtx.clearRect(0, 0, dsz, dsz);
                         tintCtx.drawImage(info.img, f * sw, 0, sw, info.img.height, 0, 0, dsz, dsz);
@@ -750,7 +936,10 @@
                     killStreak += 2;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
                     document.getElementById('cells-count').innerText = "KILLS: " + score;
+                    playSound('enemy_hit'); // 播放敌人击中/死亡音效
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, CONFIG.colors.enemyMedium, 20, 40);
+                } else {
+                    playSound('enemy_hit');
                 }
             }
         }
@@ -793,12 +982,10 @@
                     let dsz = sw * this.spriteScale;
                     let vy = (this.h / 2) - dsz;
                     
-                    // 1. 原图
                     if (this.frozen) ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.2)';
                     ctx.drawImage(info.img, f * sw, 0, sw, info.img.height, -dsz / 2, vy, dsz, dsz);
                     ctx.filter = 'none';
 
-                    // 2. 冰冻遮罩 (Offscreen)
                     if (this.frozen) {
                         tintCtx.clearRect(0, 0, dsz, dsz);
                         tintCtx.drawImage(info.img, f * sw, 0, sw, info.img.height, 0, 0, dsz, dsz);
@@ -828,7 +1015,10 @@
                     killStreak++;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
                     document.getElementById('cells-count').innerText = "KILLS: " + score;
+                    playSound('enemy_hit'); // 播放敌人击中/死亡音效
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, CONFIG.colors.enemy, 15, 30);
+                } else {
+                    playSound('enemy_hit');
                 }
             }
         }
@@ -845,6 +1035,7 @@
             }
             break(p) {
                 this.opened = true; this.dead = true;
+                playSound('enemy_hit'); // 使用击打音效
                 if (Math.random() < 0.5) {
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, '#ff4400', 15, 30);
                     camera.shake = 20; floatingTexts.push(new FloatingText(this.x, this.y - 20, "TRAP!", "#f00", 30));
@@ -864,6 +1055,7 @@
                 this.bob += 0.1; this.y = this.by + Math.sin(this.bob) * 5;
                 if (checkRectCollide(this, p)) {
                     p.hp = Math.min(p.hp + 30, p.maxHp); this.dead = true;
+                    playSound('collect'); // 播放收集音效
                     floatingTexts.push(new FloatingText(this.x, this.y - 20, "+30 HP", "#0f0", 24));
                     createParticles(this.x + 10, this.y + 10, '#0f0', 5, 10);
                 }
@@ -906,6 +1098,7 @@
                 this.frenzyTimer = 600; 
                 this.energy = 0;
                 camera.shake = 20;
+                playSound('skill'); // 暴走模式音效
                 floatingTexts.push(new FloatingText(this.x, this.y - 100, "FRENZY MODE!", "#d0f", 40));
                 document.getElementById('energy-text').style.display = 'block';
                 document.getElementById('frenzy-overlay').style.opacity = 1;
@@ -920,6 +1113,7 @@
                 if (this.skillCooldown > 0) return;
                 this.skillCooldown = this.skillMaxCooldown; camera.shake = 15;
                 this.isSkillAnim = true; this.skillFrame = 0; this.state = 'skill'; this.vx = 0;
+                playSound('skill'); // 技能音效
                 createParticles(this.x, this.y, '#0ff', 20, 100);
                 enemies.forEach(e => { if (!e.dead && Math.abs((e.x + e.w / 2) - (this.x + this.w / 2)) < 300) { e.freeze(300); } });
                 floatingTexts.push(new FloatingText(this.x, this.y - 80, "FREEZE!", "#0ff", 30));
@@ -975,6 +1169,7 @@
                     keys.jump = false;
                     if (this.grounded || this.jumpCount < 2) {
                         this.vy = -CONFIG.jumpForce; this.jumpCount++;
+                        playSound('jump'); // 播放跳跃音效
                         let c = this.jumpCount > 1 ? '#0ff' : '#fff'; createParticles(this.x + this.w / 2, this.y + this.h, c, 2, 8); this.isLanding = false;
                     }
                 }
@@ -989,6 +1184,7 @@
                     keys.dash = false; this.isDashing = true; this.dashTimer = CONFIG.dashDuration; this.dashCooldown = 60;
                     if (this.isFrenzy) this.dashCooldown = 20; 
                     let d = this.facingRight ? 1 : -1; this.vx = d * CONFIG.dashSpeed; this.vy = 0; camera.shake = 8; this.comboCount = 0; this.isLanding = false;
+                    playSound('dash'); // 播放冲刺音效
                 }
                 if (this.isDashing) {
                     this.dashTimer--; this.vy = 0; this.x += this.vx;
@@ -1042,6 +1238,7 @@
             takeDamage(a) {
                 if (this.isDying || this.dead || this.invulnerableTimer > 0) return;
                 this.hp -= a; this.invulnerableTimer = 60;
+                playSound('damage'); // 播放受伤音效
                 floatingTexts.push(new FloatingText(this.x, this.y - 30, `-${Math.floor(a)}`, "#f00", 30));
                 let r = a / this.maxHp; camera.shake = 10 + r * 20;
                 let o = document.getElementById('damage-overlay'); o.style.opacity = Math.min(1, r + 0.3); setTimeout(() => o.style.opacity = 0, 200);
@@ -1052,8 +1249,24 @@
                 }
             }
             performAttack(enemies) {
-                const r = 120; const hX = this.facingRight ? this.x + this.w : this.x - r;
+                // 修改：增加判定范围，让攻击距离更远 (120 -> 150)
+                const r = 150; 
+                const hX = this.facingRight ? this.x + this.w : this.x - r;
                 this.attackHitbox = { x: hX, y: this.y, w: r, h: this.h, timer: 10 };
+                
+                playSound('attack'); // 播放攻击音效
+
+                // 新增：添加刀光特效
+                // 在攻击动作开始时生成一个向前的刀光
+                // 修改：增加 40px 的额外偏移，让刀光离角色更远
+                const slashOffset = 40; 
+                impactEffects.push(new SlashEffect(
+                    this.x + (this.facingRight ? this.w + slashOffset : -slashOffset), 
+                    this.y + this.h / 2, 
+                    this.facingRight, 
+                    this.isFrenzy
+                ));
+
                 let sa = 5; if (this.comboCount === 3) sa = 15; camera.shake = sa; this.vx = this.facingRight ? 5 : -5;
                 for (let c of chests) if (!c.opened && checkRectCollide(this.attackHitbox, c)) c.break(this);
                 for (let g of grenades) if (g.state === 'flying' && checkRectCollide(this.attackHitbox, g)) g.destroy();
@@ -1125,7 +1338,6 @@
             }
         }
 
-        // --- Loop ---
         function loop(ts) {
             if (gameState === 'GAMEOVER') {
                 ctx.fillStyle = CONFIG.colors.bg; ctx.fillRect(0, 0, width, height);
@@ -1154,14 +1366,12 @@
                     ctx.drawImage(bgImage, bx, 0, sw, height); ctx.drawImage(bgImage, bx + sw, 0, sw, height); if (bx + sw < width) ctx.drawImage(bgImage, bx + sw * 2, 0, sw, height);
                 } else { ctx.fillStyle = '#151525'; for (let i = 0; i < 10; i++) ctx.fillRect((i * 600 - camera.x * 0.5) % 3000, 100, 200, height); }
                 
-                // 【修复】：摄像机跟随策略：在 spawning 期间不进行垂直移动
                 if (!player.isSpawning) {
                     let tx = player.x - width / 2 + player.w / 2; let lx = player.isDashing ? 0.2 : 0.1; camera.x += (tx - camera.x) * lx;
                     let dH = height * 0.3; let dT = height * 0.25; let psy = player.y - camera.y; let ty = camera.y;
                     if (psy < dT) ty = player.y - dT; else if (psy > dT + dH) ty = player.y - (dT + dH);
                     camera.y += (ty - camera.y) * 0.1;
                 } else {
-                     // 初始下坠时，水平跟随，垂直不动
                     let tx = player.x - width / 2 + player.w / 2;
                     camera.x += (tx - camera.x) * 0.1;
                 }
@@ -1182,7 +1392,6 @@
                 for (let i = pickups.length - 1; i >= 0; i--) { let p = pickups[i]; p.update(player); p.draw(ctx, cdx, cdy); if (p.dead) pickups.splice(i, 1); }
                 for (let i = impactEffects.length - 1; i >= 0; i--) { let e = impactEffects[i]; e.update(); e.draw(ctx, cdx, cdy); if (e.dead) impactEffects.splice(i, 1); }
                 
-                // Draw Souls
                 souls.forEach(s => s.update(player));
                 souls = souls.filter(s => !s.dead);
                 souls.forEach(s => s.draw(ctx, cdx, cdy));
@@ -1197,14 +1406,23 @@
         document.getElementById('start-btn').addEventListener('click', startGame);
         document.getElementById('restart-btn').addEventListener('click', startGame);
 
-        function startGame(){ gameState='PLAYING'; document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden'); document.getElementById('skill-container').classList.remove('hidden'); initGame(); loop(); }
+        function startGame(){ 
+            gameState='PLAYING'; 
+            document.getElementById('start-screen').classList.add('hidden'); 
+            document.getElementById('game-over-screen').classList.add('hidden'); 
+            document.getElementById('skill-container').classList.remove('hidden'); 
+            playSound('bgm'); // 播放背景音乐
+            initGame(); 
+            loop(); 
+        }
         function setGameOver(){ 
             gameState='GAMEOVER'; 
+            stopSound('bgm'); // 停止背景音乐
+            playSound('game_over'); // 播放结束音效
             document.getElementById('final-score').innerText=`DISTANCE: ${distance}m`; 
             document.getElementById('game-over-screen').classList.remove('hidden'); 
             document.getElementById('skill-container').classList.add('hidden'); 
             
-            // 【修复】重置暴走状态和UI
             document.getElementById('frenzy-overlay').style.opacity = 0;
             document.getElementById('energy-text').style.display = 'none';
             document.getElementById('energy-fill').style.width = '0%';
@@ -1213,10 +1431,10 @@
         }
         function initGame(){ 
             score=0; killStreak=0; distance=0; dangerLevel=1.0; lastGeneratedX=-200; lastGeneratedY=height-100; 
-            chests=[]; pickups=[]; grenades=[]; impactEffects=[]; souls=[]; // Clear souls
+            chests=[]; pickups=[]; grenades=[]; impactEffects=[]; souls=[]; 
             wanderingSoul=null; hitStop=0; 
             document.getElementById('cells-count').innerText="KILLS: 0"; updateStatusPanel(); 
-            // 【修复】初始化时也确保UI重置
+            
             document.getElementById('frenzy-overlay').style.opacity = 0;
             document.getElementById('energy-text').style.display = 'none';
             document.getElementById('energy-fill').style.width = '0%';
@@ -1241,7 +1459,6 @@
                 if(sc<mc)enemies.push(new MediumEnemy(lastGeneratedX+sl/2,lastGeneratedY-110,cd,cd)); 
                 else if(sc<0.9)enemies.push(new Enemy(lastGeneratedX+sl/2+rand(-50,50),lastGeneratedY-70,cd,cd)); 
                 
-                // 【修复】调高蝙蝠生成高度 (280~400)
                 if(Math.random()<0.5){let batY=lastGeneratedY-rand(280,400);enemies.push(new BatEnemy(lastGeneratedX+rand(100,sl-100),batY,cd,cd));} 
                 
                 if(Math.random()<0.5){let ph=lastGeneratedY-rand(150,250);let pw=rand(150,250);platforms.push({x:lastGeneratedX+rand(0,sl-pw),y:ph,w:pw,h:30,depressionOffset:0,depressionTimer:0});} 
@@ -1254,7 +1471,6 @@
         window.addEventListener('mousedown', () => { if(gameState==='PLAYING')keys.attack=true; });
         window.addEventListener('mouseup', () => { if(gameState==='PLAYING')keys.attack=false; });
         
-        // 关键修复：添加 {passive: false} 以确保 preventDefault 生效
         const setupTouch = (id, k) => { 
             const el = document.getElementById(id); 
             el.addEventListener('touchstart', e => { 
@@ -1267,7 +1483,6 @@
             }, { passive: false }); 
         };
         setupTouch('btn-left','left'); setupTouch('btn-right','right'); setupTouch('btn-jump','jump'); setupTouch('btn-attack','attack'); setupTouch('btn-dash','dash'); setupTouch('btn-skill','skill');
-        // 添加向下按键的触摸绑定
         setupTouch('btn-down', 'down');
     </script>
 </body>
