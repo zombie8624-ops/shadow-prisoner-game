@@ -469,54 +469,6 @@
     </div>
 
     <script>
-        // 音效配置
-        const AUDIO_CONFIG = {
-            bgm: 'bgm.mp3',
-            jump: 'jump.mp3',
-            attack: 'attack.mp3',
-            dash: 'dash.mp3',
-            damage: 'damage.mp3', // 玩家受伤
-            enemy_hit: 'enemy_death.mp3', // 敌人死亡或击中
-            collect: 'collect.mp3',
-            skill: 'skill.mp3',
-            game_over: 'game_over.mp3'
-        };
-
-        const AUDIO_CACHE = {};
-
-        // 初始化音效
-        function initAudio() {
-            for (const [key, src] of Object.entries(AUDIO_CONFIG)) {
-                const audio = new Audio(src);
-                if (key === 'bgm') audio.loop = true;
-                AUDIO_CACHE[key] = audio;
-            }
-        }
-        initAudio();
-
-        // 播放音效函数
-        function playSound(name) {
-            const audio = AUDIO_CACHE[name];
-            if (audio) {
-                if (name === 'bgm') {
-                    audio.play().catch(e => console.log('BGM Autoplay prevented'));
-                } else {
-                    // 克隆节点以支持重叠播放（例如快速攻击）
-                    const clone = audio.cloneNode();
-                    clone.volume = 0.6; // 设置音效音量
-                    clone.play().catch(e => {}); 
-                }
-            }
-        }
-
-        function stopSound(name) {
-            const audio = AUDIO_CACHE[name];
-            if (audio) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
-        }
-
         const SPRITE_CONFIG = {
             hero: { idle: {src:'hero_idle.png',frames:6}, run: {src:'hero_run.png',frames:8}, jump: {src:'hero_jump.png',frames:4}, dash: {src:'hero_dash.png',frames:4}, attack_1: {src:'hero_attack_1.png',frames:8}, attack_2: {src:'hero_attack_2.png',frames:3}, attack_3: {src:'hero_attack_3.png',frames:5}, skill: {src:'hero_skill.png',frames:3}, plunge: {src:'hero_plunge.png',frames:1} },
             enemy: { idle: {src:'enemy_idle.png',frames:4}, walk: {src:'enemy_walk.png',frames:6}, attack: {src:'enemy_attack.png',frames:5} },
@@ -636,12 +588,7 @@
                     this.vx = this.vx * 0.8 + (dx / dist) * speed * 0.2;
                     this.vy = this.vy * 0.8 + (dy / dist) * speed * 0.2;
                     this.x += this.vx; this.y += this.vy;
-                    if (dist < 50) { 
-                        player.addEnergy(this.amount); 
-                        this.dead = true; 
-                        playSound('collect'); // 播放收集音效
-                        createParticles(this.x, this.y, '#aa00ff', 5, 5); 
-                    }
+                    if (dist < 50) { player.addEnergy(this.amount); this.dead = true; createParticles(this.x, this.y, '#aa00ff', 5, 5); }
                 }
             }
             draw(ctx, cx, cy) {
@@ -855,10 +802,7 @@
                     killStreak++;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
                     document.getElementById('cells-count').innerText = "KILLS: " + score;
-                    playSound('enemy_hit'); // 播放敌人击中/死亡音效
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, '#500', 10, 20);
-                } else {
-                    playSound('enemy_hit'); // 受伤音效
                 }
             }
         }
@@ -936,10 +880,7 @@
                     killStreak += 2;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
                     document.getElementById('cells-count').innerText = "KILLS: " + score;
-                    playSound('enemy_hit'); // 播放敌人击中/死亡音效
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, CONFIG.colors.enemyMedium, 20, 40);
-                } else {
-                    playSound('enemy_hit');
                 }
             }
         }
@@ -1015,10 +956,7 @@
                     killStreak++;
                     if (killStreak >= 5) { killStreak = 0; Math.random() > 0.5 ? player.upgrade('attack') : player.upgrade('speed'); }
                     document.getElementById('cells-count').innerText = "KILLS: " + score;
-                    playSound('enemy_hit'); // 播放敌人击中/死亡音效
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, CONFIG.colors.enemy, 15, 30);
-                } else {
-                    playSound('enemy_hit');
                 }
             }
         }
@@ -1035,7 +973,6 @@
             }
             break(p) {
                 this.opened = true; this.dead = true;
-                playSound('enemy_hit'); // 使用击打音效
                 if (Math.random() < 0.5) {
                     createParticles(this.x + this.w / 2, this.y + this.h / 2, '#ff4400', 15, 30);
                     camera.shake = 20; floatingTexts.push(new FloatingText(this.x, this.y - 20, "TRAP!", "#f00", 30));
@@ -1055,7 +992,6 @@
                 this.bob += 0.1; this.y = this.by + Math.sin(this.bob) * 5;
                 if (checkRectCollide(this, p)) {
                     p.hp = Math.min(p.hp + 30, p.maxHp); this.dead = true;
-                    playSound('collect'); // 播放收集音效
                     floatingTexts.push(new FloatingText(this.x, this.y - 20, "+30 HP", "#0f0", 24));
                     createParticles(this.x + 10, this.y + 10, '#0f0', 5, 10);
                 }
@@ -1098,7 +1034,6 @@
                 this.frenzyTimer = 600; 
                 this.energy = 0;
                 camera.shake = 20;
-                playSound('skill'); // 暴走模式音效
                 floatingTexts.push(new FloatingText(this.x, this.y - 100, "FRENZY MODE!", "#d0f", 40));
                 document.getElementById('energy-text').style.display = 'block';
                 document.getElementById('frenzy-overlay').style.opacity = 1;
@@ -1113,7 +1048,6 @@
                 if (this.skillCooldown > 0) return;
                 this.skillCooldown = this.skillMaxCooldown; camera.shake = 15;
                 this.isSkillAnim = true; this.skillFrame = 0; this.state = 'skill'; this.vx = 0;
-                playSound('skill'); // 技能音效
                 createParticles(this.x, this.y, '#0ff', 20, 100);
                 enemies.forEach(e => { if (!e.dead && Math.abs((e.x + e.w / 2) - (this.x + this.w / 2)) < 300) { e.freeze(300); } });
                 floatingTexts.push(new FloatingText(this.x, this.y - 80, "FREEZE!", "#0ff", 30));
@@ -1169,7 +1103,6 @@
                     keys.jump = false;
                     if (this.grounded || this.jumpCount < 2) {
                         this.vy = -CONFIG.jumpForce; this.jumpCount++;
-                        playSound('jump'); // 播放跳跃音效
                         let c = this.jumpCount > 1 ? '#0ff' : '#fff'; createParticles(this.x + this.w / 2, this.y + this.h, c, 2, 8); this.isLanding = false;
                     }
                 }
@@ -1184,7 +1117,6 @@
                     keys.dash = false; this.isDashing = true; this.dashTimer = CONFIG.dashDuration; this.dashCooldown = 60;
                     if (this.isFrenzy) this.dashCooldown = 20; 
                     let d = this.facingRight ? 1 : -1; this.vx = d * CONFIG.dashSpeed; this.vy = 0; camera.shake = 8; this.comboCount = 0; this.isLanding = false;
-                    playSound('dash'); // 播放冲刺音效
                 }
                 if (this.isDashing) {
                     this.dashTimer--; this.vy = 0; this.x += this.vx;
@@ -1238,7 +1170,6 @@
             takeDamage(a) {
                 if (this.isDying || this.dead || this.invulnerableTimer > 0) return;
                 this.hp -= a; this.invulnerableTimer = 60;
-                playSound('damage'); // 播放受伤音效
                 floatingTexts.push(new FloatingText(this.x, this.y - 30, `-${Math.floor(a)}`, "#f00", 30));
                 let r = a / this.maxHp; camera.shake = 10 + r * 20;
                 let o = document.getElementById('damage-overlay'); o.style.opacity = Math.min(1, r + 0.3); setTimeout(() => o.style.opacity = 0, 200);
@@ -1254,8 +1185,6 @@
                 const hX = this.facingRight ? this.x + this.w : this.x - r;
                 this.attackHitbox = { x: hX, y: this.y, w: r, h: this.h, timer: 10 };
                 
-                playSound('attack'); // 播放攻击音效
-
                 // 新增：添加刀光特效
                 // 在攻击动作开始时生成一个向前的刀光
                 // 修改：增加 40px 的额外偏移，让刀光离角色更远
@@ -1406,19 +1335,9 @@
         document.getElementById('start-btn').addEventListener('click', startGame);
         document.getElementById('restart-btn').addEventListener('click', startGame);
 
-        function startGame(){ 
-            gameState='PLAYING'; 
-            document.getElementById('start-screen').classList.add('hidden'); 
-            document.getElementById('game-over-screen').classList.add('hidden'); 
-            document.getElementById('skill-container').classList.remove('hidden'); 
-            playSound('bgm'); // 播放背景音乐
-            initGame(); 
-            loop(); 
-        }
+        function startGame(){ gameState='PLAYING'; document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden'); document.getElementById('skill-container').classList.remove('hidden'); initGame(); loop(); }
         function setGameOver(){ 
             gameState='GAMEOVER'; 
-            stopSound('bgm'); // 停止背景音乐
-            playSound('game_over'); // 播放结束音效
             document.getElementById('final-score').innerText=`DISTANCE: ${distance}m`; 
             document.getElementById('game-over-screen').classList.remove('hidden'); 
             document.getElementById('skill-container').classList.add('hidden'); 
